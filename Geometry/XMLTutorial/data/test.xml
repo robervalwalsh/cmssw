@@ -11,16 +11,16 @@
         <Constant name = "pltTilt" value = "1.57*deg" />
         
         <Constant name = "SiPlane0RtoCenter" value = "48.5*mm" />
-        <Constant name = "SiPlane1RtoCenter" value = "49.5*mm" />
+        <Constant name = "SiPlane1RtoCenter" value = "260*mm" />
         <Constant name = "SiPlane2RtoCenter" value = "50.5*mm" />
         
         <Constant name = "SiPlane0ZtoCenter" value = "1714.1*mm" />
         <Constant name = "SiPlane1ZtoCenter" value = "1751.8*mm" />
         <Constant name = "SiPlane2ZtoCenter" value = "1789.5*mm" />
         
-        <Constant name = "ROCWidthX" value = "10.0*mm"  />
-        <Constant name = "ROCWidthY" value = "10.0*mm"  />
-        <Constant name = "SiThkZ"   value = "0.30*mm" />
+        <Constant name = "ROCWidthX" value = "100.0*mm"  />
+        <Constant name = "ROCWidthY" value = "100.0*mm"  />
+        <Constant name = "SiThkZ"   value = "3*mm" />
         
         <Constant name = "TelWidthX" value = "[ROCWidthX]+2.*mm" />
         <Constant name = "TelWidthY" value = "[ROCWidthY]" />
@@ -29,8 +29,8 @@
         
         <Constant name = "NumberOfRows" value = "80" />
         <Constant name = "NumberOfColumns" value = "52" />
-        <Constant name = "PixelRowWidth" value = "0.1*mm" />
-        <Constant name = "PixelColumnWidth" value = "0.15*mm" />
+        <Constant name = "PixelRowWidth" value = "1*mm" />
+        <Constant name = "PixelColumnWidth" value = "1.5*mm" />
         <Constant name = "ActiveAreaColumnWidth" value = "[PixelColumnWidth]*[NumberOfColumns]" />
         <Constant name = "ActiveAreaRowWidth" value = "[PixelRowWidth]*[NumberOfRows]" />
         
@@ -42,15 +42,7 @@
         <!-- Declare telescope components-->
         <Box  name="PLTSensorPlane"        dx="[ROCWidthX]/2."       dy="[ROCWidthY]/2."       
         dz="[SiThkZ]/2." /> 
-        
-        <Tubs name="PLT"    startPhi="0.0*deg" deltaPhi="360*deg" rMin="[cms:TrackBeamR1]" 
-        rMax="[PLTMaxR]" 
-        dz="[TelWidthZ]/2."/>
-        <!--
-        <Tubs name="Telescope"      startPhi="-22.5*deg" deltaPhi="45.*deg" rMin="0.*mm"
-        rMax="56.*mm"  dz="[TelWidthZ]"/> -->
-        
-        <Box  name="Telescope"  dx="[TelWidthX]/2."  dy="[TelWidthY]/2."   dz="[TelWidthZ]/2." />
+    
         
         <Box  name="PLTPixel"  dx="[PixelColumnWidth]/2."  dy="[PixelRowWidth]/2."   dz="[SiThkZ]/2." />
         
@@ -62,15 +54,7 @@
     <LogicalPartSection label="plt">
         <!--Changed all materials to be materials:Vacuum except for silicon -->
         <!-- Telescope logical parts -->
-        <LogicalPart name="PLT" category="unspecified">
-            <rSolid name="PLT"/>
-            <rMaterial name="materials:Vacuum"/>
-        </LogicalPart>
-        
-        <LogicalPart name="Telescope" category="unspecified">
-            <rSolid name="Telescope"/>
-            <rMaterial name="materials:Vacuum"/>
-        </LogicalPart>
+
         
         <LogicalPart name="PLTSensorPlane" category="unspecified">
             <rSolid name="PLTSensorPlane"/>
@@ -118,54 +102,10 @@
             <Numeric name="Theta" value="90*deg"/>
             <Numeric name="Phi" value="-90.*deg"/>
         </Algorithm>
-        
-        <PosPart copyNumber="0">
-            <rParent name="Telescope"/>
-            <rChild name="PLTSensorPlane"/>
-            <Translation x="-[TelWidthX]/2.+[ROCWidthX]/2." y="0.*mm" z="-[TelWidthZ]/2.+[SiThkZ]/2." />
-            <rRotation  name="rotations:000D" />
-        </PosPart>
-        
-        <PosPart copyNumber="1">
-            <rParent name="Telescope"/>
-            <rChild name="PLTSensorPlane"/>
-            <Translation x="-[TelWidthX]/2.+[ROCWidthX]/2.+1.*mm" y="0.*mm" z="0.*mm" />
-            <rRotation  name="rotations:000D" />
-        </PosPart>
-        
-        <PosPart copyNumber="2">
-            <rParent name="Telescope"/>
-            <rChild name="PLTSensorPlane"/>
-            <Translation x="-[TelWidthX]/2.+[ROCWidthX]/2.+2.*mm" y="0.*mm" z="[TelWidthZ]/2.-[SiThkZ]/2" />
-            <rRotation  name="rotations:000D" />
-        </PosPart>
 
-        <PosPart copyNumber="1">
-            <rParent name="pltbcm:PLTBCM"/>
-            <rChild name="PLT"/>
-            <Translation x="0.*mm" y="0.*mm" z="[SiPlane1ZtoCenter]-[pltbcm:PltBcmZ]" />
-            <rRotation name="rotations:000D"/>
-        </PosPart>
-
-        <!--      Old positioning without PLTBCM volume
-        <PosPart copyNumber="1">
-            <rParent name="cms:CMSE"/>
-            <rChild name="PLT"/>
-            <Translation x="0.*mm" y="0.*mm" z="[SiPlane1ZtoCenter]" />
-            <rRotation name="rotations:000D"/>
-        </PosPart>
-
-	
-        <PosPart copyNumber="0">
-            <rParent name="cms:CMSE"/>
-            <rChild name="PLT"/>
-            <Translation x="0.*mm" y="0.*mm" z="-[SiPlane1ZtoCenter]" />
-            <rRotation name="rotations:180D"/>
-        </PosPart> -->
-        
         <Algorithm name="global:DDAngular">
-            <rParent name="PLT"/>
-            <String name="ChildName" value="Telescope"/>
+            <rParent name="cms:CMSE"/>
+            <String name="ChildName" value="PLTSensorPlane"/>
             <Numeric name="StartCopyNo" value="0"/>
             <Numeric name="IncrCopyNo" value="1"/>
             <Numeric name="N" value="8"/>
@@ -175,7 +115,13 @@
             <Vector name="Center" type="numeric" nEntries="3"> 0, 0, 0 </Vector>
             <Vector name="RotateSolid" type="numeric" nEntries="24"> 0.*deg, 0.*deg, -90.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg, 0.*deg </Vector>
         </Algorithm>
-        
+
+        <PosPart copyNumber="1">
+            <rParent name="cms:CMSE"/>
+            <rChild name="PLTSensorPlane"/>
+            <Translation x="0.*mm" y="0.*mm" z="0.*mm" />
+            <rRotation name="rotations:000D"/>
+        </PosPart>
         
     </PosPartSection>
     
