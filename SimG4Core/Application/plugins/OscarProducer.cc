@@ -20,14 +20,9 @@
 #include "FWCore/Utilities/interface/RandomNumberGenerator.h"
 #include "CLHEP/Random/Random.h"
 
-#include "FWCore/Concurrency/interface/SharedResourceNames.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 #include <iostream>
-
-namespace edm {
-    class StreamID;
-}
 
 namespace {
     //
@@ -42,7 +37,7 @@ namespace {
     //
     class StaticRandomEngineSetUnset {
     public:
-        StaticRandomEngineSetUnset(edm::StreamID const&);
+        StaticRandomEngineSetUnset();
         explicit StaticRandomEngineSetUnset(CLHEP::HepRandomEngine * engine);
         ~StaticRandomEngineSetUnset();
         CLHEP::HepRandomEngine* getEngine() const;
@@ -53,13 +48,10 @@ namespace {
 }
 
 OscarProducer::OscarProducer(edm::ParameterSet const & p)
-{
-    // Random number generation not allowed here
-    StaticRandomEngineSetUnset random(nullptr);
-
-    usesResource(edm::SharedResourceNames::kGEANT);
-    usesResource(edm::SharedResourceNames::kCLHEPRandomEngine);
-
+{   
+    StaticRandomEngineSetUnset random;
+    m_engine = random.getEngine();
+    
     produces<edm::SimTrackContainer>().setBranchAlias("SimTracks");
     produces<edm::SimVertexContainer>().setBranchAlias("SimVertices");
     produces<edm::PSimHitContainer>("TrackerHitsPixelBarrelLowTof");
@@ -81,7 +73,8 @@ OscarProducer::OscarProducer(edm::ParameterSet const & p)
     produces<edm::PSimHitContainer>("FP420SI");
     produces<edm::PSimHitContainer>("BSCHits");
     produces<edm::PSimHitContainer>("PLTHits");
-
+    produces<edm::PSimHitContainer>("BHMHits");
+ 
     produces<edm::PCaloHitContainer>("EcalHitsEB");
     produces<edm::PCaloHitContainer>("EcalHitsEE");
     produces<edm::PCaloHitContainer>("EcalHitsES");
@@ -103,7 +96,7 @@ OscarProducer::OscarProducer(edm::ParameterSet const & p)
     produces<edm::PCaloHitContainer>("WedgeHits"); 
     
     //m_runManager = RunManager::init(p);
-    m_runManager.reset(new RunManager(p));
+    m_runManager = new RunManager(p);
 
     //register any products 
     m_producers= m_runManager->producers();
@@ -115,23 +108,35 @@ OscarProducer::OscarProducer(edm::ParameterSet const & p)
     }
 
     //UIsession manager for message handling
-    m_UIsession.reset(new CustomUIsession());
+    m_UIsession = new CustomUIsession();
 
 }
 
 OscarProducer::~OscarProducer() 
-{ }
+{ 
+  //this is causing a seg fault when an exception occurs while constructing
+  // an HcalSD.  Need to check for memory problems. 
+  if (m_runManager!=0) delete m_runManager; 
+  if (m_UIsession!=0) delete m_UIsession;
 
-void OscarProducer::beginRun(const edm::Run & r, const edm::EventSetup & es)
-{
-    // Random number generation not allowed here
-    StaticRandomEngineSetUnset random(nullptr);
-    m_runManager->initG4(es);
 }
 
+void OscarProducer::beginRun(edm::Run & r, const edm::EventSetup & es)
+{
+  m_runManager->initG4(es);
+}
+
+
+void OscarProducer::beginJob()
+{
+  StaticRandomEngineSetUnset random(m_engine);
+}
+ 
+void OscarProducer::endJob() { }
+ 
 void OscarProducer::produce(edm::Event & e, const edm::EventSetup & es)
 {
-    StaticRandomEngineSetUnset random(e.streamID());
+    StaticRandomEngineSetUnset random(m_engine);
 
     std::vector<SensitiveTkDetector*>& sTk = m_runManager->sensTkDetectors();
     std::vector<SensitiveCaloDetector*>& sCalo = m_runManager->sensCaloDetectors();
@@ -187,16 +192,18 @@ void OscarProducer::produce(edm::Event & e, const edm::EventSetup & es)
 }
 
 
-StaticRandomEngineSetUnset::StaticRandomEngineSetUnset(edm::StreamID const& streamID) {
+StaticRandomEngineSetUnset::StaticRandomEngineSetUnset() {
 
-    edm::Service<edm::RandomNumberGenerator> rng;
+    using namespace edm;
+    Service<RandomNumberGenerator> rng;
+
     if ( ! rng.isAvailable()) {
         throw cms::Exception("Configuration")
             << "The OscarProducer module requires the RandomNumberGeneratorService\n"
                "which is not present in the configuration file.  You must add the service\n"
                "in the configuration file if you want to run OscarProducer";
     }
-    m_currentEngine = &(rng->getEngine(streamID));
+    m_currentEngine = &(rng->getEngine());
 
     m_previousEngine = CLHEP::HepRandom::getTheEngine();
     CLHEP::HepRandom::setTheEngine(m_currentEngine);
@@ -218,3 +225,4 @@ CLHEP::HepRandomEngine*
 StaticRandomEngineSetUnset::getEngine() const { return m_currentEngine; }
 
 DEFINE_FWK_MODULE(OscarProducer);
+ 

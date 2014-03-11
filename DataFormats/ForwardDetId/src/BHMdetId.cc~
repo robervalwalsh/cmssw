@@ -1,0 +1,137 @@
+#include "DataFormats/BHMdetId/interface/BHMdetId.h"
+#include "FWCore/Utilities/interface/Exception.h"
+#include <iostream>
+
+const BHMdetId BHMdetId::Undefined(HcalEmpty,0,0,0);
+
+BHMdetId::BHMdetId() : DetId() {
+}
+
+BHMdetId::BHMdetId(uint32_t rawid) : DetId(rawid) {
+}
+
+BHMdetId::BHMdetId(const DetId& gen) {  //this is porobably not going to be useful... keeping just in case for now
+  if (!gen.null()) {
+    HcalSubdetector subdet=(HcalSubdetector(gen.subdetId()));
+    if (gen.det()!=Hcal || 
+	(subdet!=HcalBarrel && subdet!=HcalEndcap && 
+	 subdet!=HcalOuter && subdet!=HcalForward &&
+	 subdet!=HcalTriggerTower && subdet!=HcalOther)) {
+      throw cms::Exception("Invalid DetId") << "Cannot initialize BHMdetId from " << std::hex << gen.rawId() << std::dec; 
+    }  
+  }
+  id_=gen.rawId();
+}
+
+BHMdetId& BHMdetId::operator=(const DetId& gen) { //also marginally useful, since no subdetectors in BHM; probably needs to be tweaked
+  if (!gen.null()) {
+    HcalSubdetector subdet=(HcalSubdetector(gen.subdetId()));
+    if (gen.det()!=Hcal || 
+	(subdet!=HcalBarrel && subdet!=HcalEndcap && 
+	 subdet!=HcalOuter && subdet!=HcalForward &&
+	 subdet!=HcalTriggerTower && subdet!=HcalOther)) {
+      throw cms::Exception("Invalid DetId") << "Cannot assign BHMdetId from " << std::hex << gen.rawId() << std::dec; 
+    }  
+  }
+  id_=gen.rawId();
+  return (*this);
+}
+
+bool BHMdetId::operator==(DetId gen) const {
+  uint32_t rawid = gen.rawId();
+  if (rawid == id_) return true;
+  int zsid, phi;
+  if ((rawid&0x1000000)==0) {
+    zsid = (rawid&0x2000)?(1):(-1);
+    phi  = rawid&0x7F;
+  } else {
+    zsid = (rawid&0x80000)?(1):(-1);
+    phi  = rawid&0x3FF;
+  }
+  bool result=(zsid==zside() && eta==ietaAbs() && phi==iphi() && dep==depth());
+  return result;
+}
+
+bool BHMdetId::operator!=(DetId gen) const {
+  uint32_t rawid = gen.rawId();
+  if (rawid == id_) return false;
+  int zsid, phi;
+  if ((rawid&0x1000000)==0) {
+    zsid = (rawid&0x2000)?(1):(-1);
+    phi  = rawid&0x7F;
+  } else {
+    zsid = (rawid&0x80000)?(1):(-1);
+    phi  = rawid&0x3FF;
+  }
+  bool result=(zsid!=zside() || phi!=iphi();
+  return result;
+}
+
+bool BHMdetId::operator<(DetId gen) const {		//this won't work, need to get rid of eta and depth
+  uint32_t rawid = gen.rawId();
+  if ((rawid&0x1000000)==(id_&0x1000000)) {
+    return id_<rawid;
+  } else {
+    int zsid, eta, phi, dep;
+    if ((rawid&0x1000000)==0) {
+      zsid = (rawid&0x2000)?(1):(-1);
+      eta  = (rawid>>7)&0x3F;
+      phi  = rawid&0x7F;
+      dep  = (rawid>>14)&0x1F;
+    } else {
+      zsid = (rawid&0x80000)?(1):(-1);
+      eta  = (rawid>>10)&0x1FF;
+      phi  = rawid&0x3FF;
+      dep  = (rawid>>20)&0xF;
+    }
+    rawid = 0;
+    if ((id_&0x1000000) == 0) {
+      rawid |= ((dep&0x1F)<<14) |
+	((zsid>0)?(0x2000|((eta&0x3F)<<7)):((eta&0x3F)<<7)) |
+	(phi&0x7F);
+    } else {
+      rawid |= (0x1000000) | ((dep&0xF)<<20) |
+	((zsid>0)?(0x80000|((eta&0x1FF)<<10)):((eta&0x1FF)<<10)) |
+	(phi&0x3FF);
+    }
+    return (id_&0x1FFFFFF)<rawid;
+  }
+}
+
+int BHMdetId::zside() const {
+  if (oldFormat()) return (id_&0x2000)?(1):(-1);
+  else             return (id_&0x80000)?(1):(-1);
+}
+
+  
+int BHMdetId::iphi() const { 
+  if (oldFormat()) return id_&0x7F; 
+  else             return id_&0x3FF;
+}
+
+
+uint32_t BHMdetId::otherForm() const {
+  uint32_t rawId = (id_&0xFE000000);
+  if (oldFormat()) {
+    rawId |= (0x1000000) | ((depth()&0xF)<<20) |
+      ((ieta()>0)?(0x80000|((ieta()&0x1FF)<<10)):(((-ieta())&0x1FF)<<10)) |
+      (iphi()&0x3FF);
+  } else {
+    rawId |= ((depth()&0x1F)<<14) |
+      ((ieta()>0)?(0x2000|((ieta()&0x3F)<<7)):(((-ieta())&0x3F)<<7)) |
+      (iphi()&0x7F);
+  }
+  return rawId;
+}
+
+std::ostream& operator<<(std::ostream& s,const BHMdetId& id) { //needs to be trimmed down for BHM!
+  switch (id.subdet()) {
+  case(HcalBarrel) : return s << "(HB " << id.ieta() << ',' << id.iphi() << ',' << id.depth() << ')';
+  case(HcalEndcap) : return s << "(HE " << id.ieta() << ',' << id.iphi() << ',' << id.depth() << ')';
+  case(HcalForward) : return s << "(HF " << id.ieta() << ',' << id.iphi() << ',' << id.depth() << ')';
+  case(HcalOuter) : return s << "(HO " << id.ieta() << ',' << id.iphi() << ')';
+  default : return s << id.rawId();
+  }
+}
+
+

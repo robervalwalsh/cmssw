@@ -1,5 +1,4 @@
 // system include files
-#include <iostream>
 #include <memory>
 #include <vector>
 #include <string>
@@ -59,7 +58,7 @@ void SimHitCaloHitDumper::analyze( const edm::Event& iEvent, const edm::EventSet
    Handle<PCaloHitContainer> CastorFIHits;
    Handle<PCaloHitContainer> CastorBUHits;
 
-   iEvent.getByLabel(edm::InputTag("g4SimHits","TrackerHitsPixelBarrelLowTof",processName), PixelBarrelHitsLowTof);
+   iEvent.getByLabel("g4SimHits","TrackerHitsPixelBarrelLowTof", PixelBarrelHitsLowTof);
    iEvent.getByLabel("g4SimHits","TrackerHitsPixelBarrelHighTof", PixelBarrelHitsHighTof);
    iEvent.getByLabel("g4SimHits","TrackerHitsPixelEndcapLowTof", PixelEndcapHitsLowTof);
    iEvent.getByLabel("g4SimHits","TrackerHitsPixelEndcapHighTof", PixelEndcapHitsHighTof);

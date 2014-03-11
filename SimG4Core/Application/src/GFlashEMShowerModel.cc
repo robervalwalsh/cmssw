@@ -20,11 +20,10 @@
 #include "G4FastSimulationManager.hh"
 #include "G4TouchableHandle.hh"
 #include "G4VSensitiveDetector.hh"
-#include "G4SystemOfUnits.hh"
 
 GFlashEMShowerModel::GFlashEMShowerModel(const G4String& modelName, 
 					 G4Envelope* envelope, 
-					 const edm::ParameterSet& parSet)
+					 edm::ParameterSet parSet)
   : G4VFastSimulationModel(modelName, envelope), theParSet(parSet) 
 {
   theWatcherOn = parSet.getParameter<bool>("watcherOn");
@@ -163,8 +162,8 @@ void GFlashEMShowerModel::makeHits(const G4FastTrack& fastTrack)
 }
 
 // ---------------------------------------------------------------------------
-void GFlashEMShowerModel::updateGflashStep(const G4ThreeVector& spotPosition, 
-					    G4double timeGlobal)
+void GFlashEMShowerModel::updateGflashStep(G4ThreeVector spotPosition, 
+					   G4double timeGlobal)
 {
   theGflashStep->GetPostStepPoint()->SetGlobalTime(timeGlobal);
   theGflashStep->GetPreStepPoint()->SetPosition(spotPosition);

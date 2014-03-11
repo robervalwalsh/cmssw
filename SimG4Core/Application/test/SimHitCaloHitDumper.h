@@ -9,20 +9,14 @@
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-
 class SimHitCaloHitDumper : public edm::EDAnalyzer{
- public:
-  explicit SimHitCaloHitDumper( const edm::ParameterSet& iConfig ):
-    processName(iConfig.getParameter<std::string>("processName")){};
+   public:
+  explicit SimHitCaloHitDumper( const edm::ParameterSet& ){};
   virtual ~SimHitCaloHitDumper() {};
   
-  virtual void analyze( const edm::Event&, const edm::EventSetup&) override;
+  virtual void analyze( const edm::Event&, const edm::EventSetup& );
   virtual void beginJob(){};
   virtual void endJob(){};
-  
- private:
-  std::string processName;
 
 };
 

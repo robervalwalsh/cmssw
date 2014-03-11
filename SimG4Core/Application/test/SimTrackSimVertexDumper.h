@@ -9,22 +9,20 @@
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 
-#include "FWCore/Utilities/interface/InputTag.h"
-
 #include <vector>
 
 class SimTrackSimVertexDumper : public edm::EDAnalyzer{
- public:
+   public:
   explicit SimTrackSimVertexDumper( const edm::ParameterSet& );
   virtual ~SimTrackSimVertexDumper() {};
   
-  virtual void analyze( const edm::Event&, const edm::EventSetup&) override;
+  virtual void analyze( const edm::Event&, const edm::EventSetup& );
   virtual void beginJob(){};
   virtual void endJob(){};
- private:
-  edm::InputTag HepMCLabel;
-  edm::InputTag SimTkLabel;
-  edm::InputTag SimVtxLabel;
+   private:
+  std::string HepMCLabel;
+  std::string SimTkLabel;
+  std::string SimVtxLabel;
   bool dumpHepMC;
 
 };

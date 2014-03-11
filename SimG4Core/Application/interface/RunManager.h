@@ -53,16 +53,17 @@ class ExceptionHandler ;
 class RunManager
 {
 public:
-
     RunManager(edm::ParameterSet const & p);
-    ~RunManager();
+    //static RunManager * instance();
+    //static RunManager * init(edm::ParameterSet const & p); 
+    virtual ~RunManager();
     void initG4(const edm::EventSetup & es);
     void initializeUserActions();
     void initializeRun();
     void terminateRun();
     void abortRun(bool softAbort=false);
     const G4Run * currentRun() const { return m_currentRun; }
-    void produce(edm::Event& inpevt, const edm::EventSetup& es);
+    void produce(edm::Event& inpevt, const edm::EventSetup & es);
     void abortEvent();
     const Generator * generator() const { return m_generator; }
     const G4Event * currentEvent() const { return m_currentEvent; }
@@ -79,9 +80,13 @@ protected:
     void resetGenParticleId( edm::Event& inpevt ); 
 private:
 
+    // static RunManager * me;
+    // explicit RunManager(edm::ParameterSet const & p);
+    
     G4RunManagerKernel * m_kernel;
     
     Generator * m_generator;
+    // edm::InputTag m_InTag ;
     std::string m_InTag ;
     
     bool m_nonBeam;
@@ -103,7 +108,7 @@ private:
     bool m_StorePhysicsTables;
     bool m_RestorePhysicsTables;
     int m_EvtMgrVerbosity;
-    //bool m_Override;
+    bool m_Override;
     bool m_check;
     edm::ParameterSet m_pGeometry;
     edm::ParameterSet m_pField;
@@ -134,8 +139,6 @@ private:
     edm::ESWatcher<IdealMagneticFieldRecord> idealMagRcdWatcher_;
 
     edm::InputTag m_theLHCTlinkTag;
-
-    std::string m_WriteFile;
 };
 
 #endif

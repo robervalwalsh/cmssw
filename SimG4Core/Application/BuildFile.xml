@@ -20,7 +20,6 @@
 <use   name="MagneticField/Engine"/>
 <use   name="MagneticField/Records"/>
 <use   name="clhep"/>
-<use   name="xerces-c"/>
 <use   name="geant4core"/>
 <use   name="hepmc"/>
 <use   name="heppdt"/>

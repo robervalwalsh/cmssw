@@ -7,7 +7,6 @@
 
 #include "SimG4Core/Application/interface/ParametrisedEMPhysics.h"
 #include "SimG4Core/Application/interface/GFlashEMShowerModel.h"
-#include "SimG4Core/Application/interface/ElectronLimiter.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 #include "G4FastSimulationManagerProcess.hh"
@@ -19,15 +18,10 @@
 #include "G4ShortLivedConstructor.hh"
 #include "G4IonConstructor.hh"
 #include "G4RegionStore.hh"
-#include "G4Electron.hh"
-#include "G4Positron.hh"
 
 #include "G4EmProcessOptions.hh"
-#include "G4PhysicsListHelper.hh"
-#include "G4SystemOfUnits.hh"
 
-ParametrisedEMPhysics::ParametrisedEMPhysics(std::string name, const edm::ParameterSet & p) 
-  : G4VPhysicsConstructor(name), theParSet(p) 
+ParametrisedEMPhysics::ParametrisedEMPhysics(std::string name, const edm::ParameterSet & p) : G4VPhysicsConstructor(name), theParSet(p) 
 {
   theEMShowerModel = 0;
   theHadShowerModel = 0;
@@ -112,78 +106,64 @@ void ParametrisedEMPhysics::ConstructProcess() {
   }
   // Russian Roulette part 
   G4EmProcessOptions opt;
-  const G4int NREG = 6; 
-  const G4String rname[NREG] = {"EcalRegion", "HcalRegion", "MuonIron",
-				"PreshowerRegion","CastorRegion",
-				"DefaultRegionForTheWorld"};
-  G4double rrfact[NREG] = { 1.0 };
-
-  // Russian roulette for gamma
-  G4double energyLim = theParSet.getParameter<double>("RusRoGammaEnergyLimit")*MeV;
-  if(energyLim > 0.0) {
-    rrfact[0] = theParSet.getParameter<double>("RusRoEcalGamma");
-    rrfact[1] = theParSet.getParameter<double>("RusRoHcalGamma");
-    rrfact[2] = theParSet.getParameter<double>("RusRoMuonIronGamma");
-    rrfact[3] = theParSet.getParameter<double>("RusRoPreShowerGamma");
-    rrfact[4] = theParSet.getParameter<double>("RusRoCastorGamma");
-    rrfact[5] = theParSet.getParameter<double>("RusRoWorldGamma");
-    for(int i=0; i<NREG; ++i) {
-      if(rrfact[i] < 1.0) {
-	opt.ActivateSecondaryBiasing("eBrem",rname[i],rrfact[i],energyLim);
-	edm::LogInfo("SimG4CoreApplication") 
-	  << "ParametrisedEMPhysics: Russian Roulette"
-	  << " for gamma Prob= " << rrfact[i]  
-	  << " Elimit(MeV)= " << energyLim/CLHEP::MeV
-	  << " inside " << rname[i];
-      }
+  double gamEcal = theParSet.getParameter<double>("RusRoEcalGamma");
+  if(gamEcal < 1.0) {
+    double gamEcalLim = theParSet.getParameter<double>("RusRoEcalGammaLimit")
+      *CLHEP::MeV;
+    if(gamEcalLim > 0.0) {
+      opt.ActivateSecondaryBiasing("eBrem","EcalRegion",gamEcal,gamEcalLim);
+      edm::LogInfo("SimG4CoreApplication") 
+	<< "ParametrisedEMPhysics: Russian Roulette "
+	<< " for gamma in ECAL Prob= " 
+	<< gamEcal << "  Elimit(MeV)= " << gamEcalLim/CLHEP::MeV;
     }
   }
-  // Russian roulette for e-
-  energyLim = theParSet.getParameter<double>("RusRoElectronEnergyLimit")*MeV;
-  if(energyLim > 0.0) {
-    rrfact[0] = theParSet.getParameter<double>("RusRoEcalElectron");
-    rrfact[1] = theParSet.getParameter<double>("RusRoHcalElectron");
-    rrfact[2] = theParSet.getParameter<double>("RusRoMuonIronElectron");
-    rrfact[3] = theParSet.getParameter<double>("RusRoPreShowerElectron");
-    rrfact[4] = theParSet.getParameter<double>("RusRoCastorElectron");
-    rrfact[5] = theParSet.getParameter<double>("RusRoWorldElectron");
-    for(int i=0; i<NREG; ++i) {
-      if(rrfact[i] < 1.0) {
-	opt.ActivateSecondaryBiasing("eIoni",rname[i],rrfact[i],energyLim);
-	opt.ActivateSecondaryBiasing("hIoni",rname[i],rrfact[i],energyLim);
-	//opt.ActivateSecondaryBiasing("muIoni",rname[i],rrfact[i],energyLim);
-	//opt.ActivateSecondaryBiasing("ionIoni",rname[i],rrfact[i],energyLim);
-	//opt.ActivateSecondaryBiasingForGamma("phot",rname[i],rrfact[i],energyLim);
-	//opt.ActivateSecondaryBiasingForGamma("compt",rname[i],rrfact[i],energyLim);
-	//opt.ActivateSecondaryBiasingForGamma("conv",rname[i],rrfact[i],energyLim);
-	edm::LogInfo("SimG4CoreApplication") 
-	  << "ParametrisedEMPhysics: Russian Roulette"
-	  << " for e- Prob= " << rrfact[i]  
-	  << " Elimit(MeV)= " << energyLim/CLHEP::MeV
-	  << " inside " << rname[i];
-      }
+  double gamHcal = theParSet.getParameter<double>("RusRoHcalGamma");
+  if(gamHcal < 1.0) {
+    double gamHcalLim = theParSet.getParameter<double>("RusRoHcalGammaLimit")
+      *CLHEP::MeV;
+    if(gamHcalLim > 0.0) {
+      opt.ActivateSecondaryBiasing("eBrem","HcalRegion",gamHcal,gamHcalLim);
+      edm::LogInfo("SimG4CoreApplication") 
+	<< "ParametrisedEMPhysics: Russian Roulette "
+	<< " for gamma in HCAL Prob= " 
+	<< gamHcal << "  Elimit(MeV)= " << gamHcalLim/CLHEP::MeV;
     }
   }
-
-  // Step limiters for e+-
-  bool eLimiter = theParSet.getParameter<bool>("ElectronStepLimit");
-  bool rLimiter = theParSet.getParameter<bool>("ElectronRangeTest");
-  bool pLimiter = theParSet.getParameter<bool>("PositronStepLimit");
-
-  if(eLimiter || rLimiter ||  pLimiter) {
-    G4PhysicsListHelper* ph = G4PhysicsListHelper::GetPhysicsListHelper();
-
-    if(eLimiter || rLimiter) {
-      theElectronLimiter = new ElectronLimiter(theParSet);
-      theElectronLimiter->SetRangeCheckFlag(rLimiter);
-      theElectronLimiter->SetFieldCheckFlag(eLimiter);
-      ph->RegisterProcess(theElectronLimiter, G4Electron::Electron());
+  double eEcal = theParSet.getParameter<double>("RusRoEcalElectron");
+  if(eEcal < 1.0) {
+    double eEcalLim = theParSet.getParameter<double>("RusRoEcalElectronLimit")
+      *CLHEP::MeV;
+    if(eEcalLim > 0.0) {
+      opt.ActivateSecondaryBiasing("eIoni","EcalRegion",eEcal,eEcalLim);
+      opt.ActivateSecondaryBiasing("hIoni","EcalRegion",eEcal,eEcalLim);
+      opt.ActivateSecondaryBiasing("muIoni","EcalRegion",eEcal,eEcalLim);
+      opt.ActivateSecondaryBiasing("ionIoni","EcalRegion",eEcal,eEcalLim);
+      // opt.ActivateSecondaryBiasingForGamma("phot","EcalRegion",eEcal,eEcalLim);
+      // opt.ActivateSecondaryBiasingForGamma("compt","EcalRegion",eEcal,eEcalLim);
+      // opt.ActivateSecondaryBiasingForGamma("conv","EcalRegion",eEcal,eEcalLim);
+      edm::LogInfo("SimG4CoreApplication") 
+	<< "ParametrisedEMPhysics: Russian Roulette "
+	<< " for electrons in ECAL Prob= " 
+	<< eEcal << "  Elimit(MeV)= " << eEcalLim/CLHEP::MeV;
     }
-  
-    if(pLimiter){
-      thePositronLimiter = new ElectronLimiter(theParSet);
-      thePositronLimiter->SetFieldCheckFlag(pLimiter);
-      ph->RegisterProcess(theElectronLimiter, G4Positron::Positron());
+  }
+  double eHcal = theParSet.getParameter<double>("RusRoHcalElectron");
+  if(eHcal < 1.0) {
+    double eHcalLim = theParSet.getParameter<double>("RusRoHcalElectronLimit")
+      *CLHEP::MeV;
+    if(eHcalLim > 0.0) {
+      opt.ActivateSecondaryBiasing("eIoni","HcalRegion",eHcal,eHcalLim);
+      opt.ActivateSecondaryBiasing("hIoni","HcalRegion",eHcal,eHcalLim);
+      opt.ActivateSecondaryBiasing("muIoni","HcalRegion",eHcal,eHcalLim);
+      opt.ActivateSecondaryBiasing("ionIoni","HcalRegion",eHcal,eHcalLim);
+      //opt.ActivateSecondaryBiasingForGamma("phot","HcalRegion",eHcal,eHcalLim);
+      // opt.ActivateSecondaryBiasingForGamma("compt","HcalRegion",eHcal,eHcalLim);
+      // opt.ActivateSecondaryBiasingForGamma("conv","HcalRegion",eHcal,eHcalLim);
+      edm::LogInfo("SimG4CoreApplication") 
+	<< "ParametrisedEMPhysics: Russian Roulette "
+	<< " for electrons in HCAL Prob= " 
+	<< eHcal << "  Elimit(MeV)= " << eHcalLim/CLHEP::MeV;
     }
   }
 }

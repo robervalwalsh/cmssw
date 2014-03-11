@@ -1,0 +1,49 @@
+#ifndef DATAFORMATS_HCALDETID_HCALDETID_H
+#define DATAFORMATS_HCALDETID_HCALDETID_H 1
+
+#include <iosfwd>
+#include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/BHMdetId/interface/HcalSubdetector.h"
+
+
+/** \class BHMdetId
+ *  Cell identifier class for the HCAL subdetectors, precision readout cells only
+ *
+ *  $Date: 2012/11/12 20:52:53 $
+ *  $Revision: 1.21 $
+ *  \author J. Mans - Minnesota
+ *
+ *  Rev.1.11: A.Kubik,R.Ofierzynski: add the hashed_index
+ */
+class BHMdetId : public DetId {
+public:
+  /** Create a null cellid*/
+  BHMdetId();
+  /** Create cellid from raw id (0=invalid tower id) */
+  BHMdetId(uint32_t rawid);
+  /** Constructor from a generic cell id */
+  BHMdetId(const DetId& id);
+  /** Assignment from a generic cell id */
+  BHMdetId& operator=(const DetId& id);
+  /** Comparison operator */
+  bool operator==(DetId id) const;
+  bool operator!=(DetId id) const;
+  bool operator<(DetId id) const;
+
+  /// get the subdetector
+  HcalSubdetector subdet() const { return (HcalSubdetector)(subdetId()); } //what does this mean?
+  bool oldFormat() const { return ((id_&0x1000000)==0)?(true):(false); }
+  /// get the z-side of the cell (1/-1)
+  int zside() const;
+  /// get the cell iphi
+  int iphi() const;
+  /// reverse format
+  uint32_t otherForm() const;
+
+  static const BHMdetId Undefined;
+
+};
+
+std::ostream& operator<<(std::ostream&,const BHMdetId& id);
+
+#endif

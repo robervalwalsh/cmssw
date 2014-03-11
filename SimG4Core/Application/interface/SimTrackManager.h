@@ -16,6 +16,7 @@
 //
 // Original Author:  
 //         Created:  Fri Nov 25 17:36:41 EST 2005
+// $Id: SimTrackManager.h,v 1.13 2010/03/11 16:53:38 sunanda Exp $
 //
 
 // system include files
@@ -38,8 +39,7 @@ public:
   
   class StrictWeakOrdering{
   public:
-    bool operator() ( TrackWithHistory * & p,const unsigned int& i) const 
-    {return p->trackID() < i;}
+    bool operator() ( TrackWithHistory * & p,const unsigned int& i) const {return p->trackID() < i;}
   };
   //      enum SpecialNumbers {InvalidID = 65535};
   /// this map contains association between vertex number and position
@@ -48,7 +48,7 @@ public:
   typedef std::map<int,MapVertexPositionVector> MotherParticleToVertexMap;
   typedef MotherParticleToVertexMap VertexMap;
   
-  SimTrackManager(bool iCollapsePrimaryVertices = false);
+  SimTrackManager(bool iCollapsePrimaryVertices =false);
   virtual ~SimTrackManager();
   
   // ---------- const member functions ---------------------
@@ -64,36 +64,27 @@ public:
   void deleteTracks();
   void cleanTkCaloStateInfoMap();
   
-  void cleanTracksWithHistory();
-
   void addTrack(TrackWithHistory* iTrack, bool inHistory, bool withAncestor) {
     std::pair<int, int> thePair(iTrack->trackID(),iTrack->parentID());
     idsave.push_back(thePair);
-    if (inHistory) { m_trksForThisEvent->push_back(iTrack); }
-    if (withAncestor) { 
-      std::pair<int,int> thisPair(iTrack->trackID(),0); 
-      ancestorList.push_back(thisPair); 
-    }
+    if (inHistory) m_trksForThisEvent->push_back(iTrack);
+    if (withAncestor) { std::pair<int,int> thisPair(iTrack->trackID(),0); ancestorList.push_back(thisPair); }
   }
   
-  void addTkCaloStateInfo(uint32_t t,
-			  const std::pair<math::XYZVectorD,math::XYZTLorentzVectorD>& p)
-  {
+  void addTkCaloStateInfo(uint32_t t,std::pair<math::XYZVectorD,math::XYZTLorentzVectorD> p){
     std::map<uint32_t,std::pair<math::XYZVectorD,math::XYZTLorentzVectorD> >::const_iterator it = 
       mapTkCaloStateInfo.find(t);
     
-    if (it ==  mapTkCaloStateInfo.end()) {
+    if (it ==  mapTkCaloStateInfo.end())
       mapTkCaloStateInfo.insert(std::pair<uint32_t,std::pair<math::XYZVectorD,math::XYZTLorentzVectorD> >(t,p));
-    }
+    
   }
   void setCollapsePrimaryVertices(bool iSet) {
     m_collapsePrimaryVertices=iSet;
   }
   int giveMotherNeeded(int i) const { 
     int theResult = 0;
-    for (unsigned int itr=0; itr<idsave.size(); itr++) { 
-      if ((idsave[itr]).first == i) { theResult = (idsave[itr]).second; break; } 
-    }
+    for (unsigned int itr=0; itr<idsave.size(); itr++) { if ((idsave[itr]).first == i) { theResult = (idsave[itr]).second; break; } }
     return theResult ; 
   }
   bool trackExists(unsigned int i) const {
@@ -105,23 +96,22 @@ public:
     }
     return flag;
   }
-  void setLHCTransportLink( const edm::LHCTransportLinkContainer * thisLHCTlink ) { 
-    theLHCTlink = thisLHCTlink; 
-  }
+  void cleanTracksWithHistory();
+  void setLHCTransportLink( const edm::LHCTransportLinkContainer * thisLHCTlink ) { theLHCTlink = thisLHCTlink; }
 
 private:
-  // stop default
-  SimTrackManager(const SimTrackManager&);   
-  const SimTrackManager& operator=(const SimTrackManager&); 
+  SimTrackManager(const SimTrackManager&); // stop default
+  
+  const SimTrackManager& operator=(const SimTrackManager&); // stop default
   
   void saveTrackAndItsBranch(TrackWithHistory *);
-  int  getOrCreateVertex(TrackWithHistory *,int,G4SimEvent * simEvent);
+  int getOrCreateVertex(TrackWithHistory *,int,G4SimEvent * simEvent);
   void cleanVertexMap();
   void reallyStoreTracks(G4SimEvent * simEvent);
   void fillMotherList();
-  int  idSavedTrack (int) const;
+  int idSavedTrack (int) const;
 
-  // to restore the pre-LHC Transport GenParticle id link to a SimTrack
+  // to restore the pre-LHCTransport GenParticle id link to a SimTrack
   void resetGenID();
 
   // ---------- member data --------------------------------
@@ -146,8 +136,8 @@ private:
 class trkIDLess
 {
 public:
-  bool operator()(TrackWithHistory * trk1, TrackWithHistory * trk2) const
-  { return (trk1->trackID() < trk2->trackID()); }
+    bool operator()(TrackWithHistory * trk1, TrackWithHistory * trk2) const
+    { return (trk1->trackID() < trk2->trackID()); }
 };
 
 #endif
