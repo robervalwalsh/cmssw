@@ -383,6 +383,9 @@ g4SimHits = cms.EDProducer("OscarProducer",
         EnergyThresholdForPersistencyInGeV = cms.double(0.2),
         EnergyThresholdForHistoryInGeV = cms.double(0.05)
     ),
+    BHMSD = cms.PSet(
+        Verbosity = cms.untracked.int32(0)
+    ),
     HcalTB02SD = cms.PSet(
         UseBirkLaw = cms.untracked.bool(False),
         BirkC1 = cms.untracked.double(0.013),
