@@ -1,11 +1,57 @@
 import os
 import re
 import glob
+# https://docs.python.org/2/library/optparse.html
+from optparse import OptionParser
+
 
 import das_client  # for the cms dataset database
 
 
 # ==============================================================================
+
+class MyOptionParser:
+    """
+My option parser
+"""
+    def __init__(self):
+        usage = "Usage: %prog [options]\n"
+        usage += "For more help..."
+        self.parser = OptionParser(usage=usage)
+        input_help = "Give the input data. Possible types are file:, dir: or dataset: (default, at DESY T2)."
+        self.parser.add_option("--input", action="store", type="string", default="",
+                               dest="input", help=input_help)
+        nevents_help = "Number of events to be processed. Default = -1 (all events)"
+        self.parser.add_option("--nevents", action="store", type="int", default=-1,
+                               dest="nevents", help=nevents_help)
+                               
+    def help(self):
+       print text_color.HELP
+       self.parser.print_help()
+       print text_color.EXEC
+    
+    def opt_status(self):
+       options, args = self.parser.parse_args()
+       if options.input == "" :
+          print text_color.WARNING + "*** warning *** : You must provide an input." + text_color.EXEC
+          self.help()
+          return 0
+       intype = "dataset"  # default
+       if ( ":" in options.input ):
+          intype = re.split(":",options.input)[0]
+       if intype != "file" and  intype != "dir" and intype != "dataset" :
+          print text_color.FAIL + "*** error *** : Input type not recognized." + text_color.EXEC
+          self.help()
+          return 0
+       return 1
+    
+    def get_opt(self):
+        """
+Returns parse list of options
+"""
+        return self.parser.parse_args()
+
+# ______________________________________________________________________________
 
 # Get the list of files to be analysed according to the input give by the user
 def get_list_of_files( opt_input ):
@@ -38,7 +84,7 @@ def get_list_of_files( opt_input ):
 # ______________________________________________________________________________
 
 # For the printouts
-class text_color:
+class TextColor:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'

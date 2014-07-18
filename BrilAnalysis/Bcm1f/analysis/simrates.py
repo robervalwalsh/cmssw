@@ -11,7 +11,8 @@ import glob
 from optparse import OptionParser
 
 sys.path.append( "lib" )
-from utils import text_color
+from utils import MyOptionParser
+from utils import TextColor
 from utils import get_list_of_files
 
 import ROOT
@@ -22,48 +23,6 @@ ROOT.gROOT.SetStyle('Plain') # white background
 
 # ___________________________________________________________________________________
 
-class MyOptionParser:
-    """
-My option parser
-"""
-    def __init__(self):
-        usage = "Usage: %prog [options]\n"
-        usage += "For more help..."
-        self.parser = OptionParser(usage=usage)
-        input_help = "Give the input data. Possible types are file:, dir: or dataset: (default, at DESY T2)."
-        self.parser.add_option("--input", action="store", type="string", default="",
-                               dest="input", help=input_help)
-        nevents_help = "Number of events to be processed. Default = -1 (all events)"
-        self.parser.add_option("--nevents", action="store", type="int", default=-1,
-                               dest="nevents", help=nevents_help)
-                               
-    def help(self):
-       print text_color.HELP
-       self.parser.print_help()
-       print text_color.EXEC
-    
-    def opt_status(self):
-       options, args = self.parser.parse_args()
-       if options.input == "" :
-          print text_color.WARNING + "*** warning *** : You must provide an input." + text_color.EXEC
-          self.help()
-          return 0
-       intype = "dataset"  # default
-       if ( ":" in options.input ):
-          intype = re.split(":",options.input)[0]
-       if intype != "file" and  intype != "dir" and intype != "dataset" :
-          print text_color.FAIL + "*** error *** : Input type not recognized." + text_color.EXEC
-          self.help()
-          return 0
-       return 1
-    
-    def get_opt(self):
-        """
-Returns parse list of options
-"""
-        return self.parser.parse_args()
-
-# ___________________________________________________________________________________
 
 def main():
 
@@ -94,11 +53,9 @@ def main():
       event.getByLabel (label, handle)
       psimhits = handle.product()
       nhits = len(psimhits)
-      print event_counter, nhits
       for i in xrange(nhits):
          hit = psimhits[i]
          tof_hist.Fill(hit.timeOfFlight())
-         print hit.timeOfFlight()
       event_counter += 1
           
    c1 = ROOT.TCanvas()
@@ -108,9 +65,9 @@ def main():
 
 # ___________________________________________________________________________________
 
-print text_color.EXEC
+print TextColor.EXEC
 
 if __name__ == '__main__':
    main()
 
-print text_color.ENDC
+print TextColor.ENDC
