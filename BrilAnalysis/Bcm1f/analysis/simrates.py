@@ -14,6 +14,7 @@ sys.path.append( "lib" )
 from utils import MyOptionParser
 from utils import TextColor
 from utils import get_list_of_files
+from data_model import MyPSimHit
 
 import ROOT
 from DataFormats.FWLite import Events, Handle
@@ -54,8 +55,9 @@ def main():
       psimhits = handle.product()
       nhits = len(psimhits)
       for i in xrange(nhits):
-         hit = psimhits[i]
-         tof_hist.Fill(hit.timeOfFlight())
+         myhit = MyPSimHit ()
+         myhit.set_time_of_flight(psimhits[i].timeOfFlight())
+         tof_hist.Fill(myhit.time_of_flight())
       event_counter += 1
           
    c1 = ROOT.TCanvas()
