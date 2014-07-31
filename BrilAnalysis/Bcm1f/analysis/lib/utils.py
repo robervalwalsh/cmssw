@@ -24,6 +24,9 @@ My option parser
         nevents_help = "Number of events to be processed. Default = -1 (all events)"
         self.parser.add_option("--nevents", action="store", type="int", default=-1,
                                dest="nevents", help=nevents_help)
+        pileup_help = "Number of pile-up events. Default = 0 (no pileup)"
+        self.parser.add_option("--pileup", action="store", type="int", default=0,
+                               dest="pileup", help=pileup_help)
                                
     def help(self):
        print text_color.HELP
