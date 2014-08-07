@@ -4,8 +4,13 @@ import glob
 # https://docs.python.org/2/library/optparse.html
 from optparse import OptionParser
 
+try:
+   __import__('imp').find_module('das_client')
+   # Make things with supposed existing module
+except ImportError:
+   pass
 
-import das_client  # for the cms dataset database
+#import das_client  # for the cms dataset database
 
 
 # ==============================================================================
@@ -22,8 +27,8 @@ My option parser
         self.parser.add_option("--input", action="store", type="string", default="",
                                dest="input", help=input_help)
         nevents_help = "Number of events to be processed. Default = -1 (all events)"
-        self.parser.add_option("--nevents", action="store", type="int", default=-1,
-                               dest="nevents", help=nevents_help)
+        self.parser.add_option("--max_events", action="store", type="int", default=-1,
+                               dest="max_events", help=nevents_help)
         pileup_help = "Number of pile-up events. Default = 0 (no pileup)"
         self.parser.add_option("--pileup", action="store", type="int", default=0,
                                dest="pileup", help=pileup_help)
@@ -73,7 +78,7 @@ def get_list_of_files( opt_input ):
       
    if intype == "dataset" :
       dataset = indata[0]
-      query = "file dataset=" + dataset
+      query = "file instance=prod/phys03 dataset=" + dataset
       # Using DAS client to retrieve the filenames
       das_client_command = "das_client.py --limit=0 --query='" + query +"'"
       # print "Running the command ", das_client_command, "..."

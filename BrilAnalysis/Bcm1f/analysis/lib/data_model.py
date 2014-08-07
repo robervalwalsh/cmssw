@@ -146,7 +146,7 @@ My hits class, for emulated or reconstructed hits
             print TextColor.WARNING + "*** warning *** : List of simhits is empty." + TextColor.EXEC
    
    # get methods
-   def emulated_hits(self):
+   def emulated(self):
       if not self._simhits or len(self._simhits) == 0:
          print TextColor.WARNING + "*** warning *** : Cannot emulate hits without any simhits." + TextColor.EXEC
          return 0
