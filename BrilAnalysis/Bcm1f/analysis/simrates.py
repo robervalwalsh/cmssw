@@ -45,19 +45,6 @@ def main():
 
    analysis.analyze()
    
-   hists = analysis.histograms()
-   
-   channels = analysis.list_of_channels()
-   
-   
-   f = ROOT.TFile("output.root", "recreate")
-   for ch in channels:
-      hists["time"][ch].Write()
-      hists["eloss"][ch].Write()
-      
-   f.Write()
-   f.Close()
-   
 #   print hists["time"][2051]
    
    

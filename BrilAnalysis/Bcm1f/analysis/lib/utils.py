@@ -74,7 +74,7 @@ def get_list_of_files( opt_input ):
    files_list = indata
    
    if intype == "dir" :
-      files_list = glob.glob(indata[0]+"*.root")
+      files_list = glob.glob(indata[0]+"/*.root")
       
    if intype == "dataset" :
       dataset = indata[0]
