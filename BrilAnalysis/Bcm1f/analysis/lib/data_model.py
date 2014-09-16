@@ -1,4 +1,6 @@
 from utils import TextColor
+from ROOT import TChain
+from ROOT import gDirectory
 
 
 def split_simhits_into_channels(simhits):
@@ -13,9 +15,57 @@ def split_simhits_into_channels(simhits):
       
 
 # ==============================================================================
+
+class MyEvents:
+   """
+My ntuple events
+"""
+   def __init__(self, files_list=None, label=None,  **kwargs):
+      if not files_list:
+         raise RuntimeError, "No input files given"
+      if not label:
+         raise RuntimeError, "No directory given"
+         
+      self._max_events = -1
+      if kwargs.has_key ('maxEvents'):
+         self._max_events = kwargs['maxEvents']
+         del kwargs['maxEvents']
+      if len(kwargs):
+         raise RuntimeError, "Unknown arguments %s" % kwargs
+         
+      self._events = TChain(label)
+      for f in files_list:
+         self._events.Add(f)
+      self._entries = self._max_events
+      if self._max_events < 0:
+         self._entries = self._events.GetEntries()
+      self._index = 0
+      
+   def __iter__ (self):
+      return self
+      
+   def next(self):
+      if self._index < self._entries:
+         index = self._index
+         # get tree (necessary?)
+         ientry = self._events.LoadTree( index )
+         if ientry < 0:
+            raise StopIteration
+         # copy entry into memory
+         nb = self._events.GetEntry( index )
+         if nb < 0:
+            next
+         self._index += 1
+         return self._events
+      else:
+         raise StopIteration()
+               
+            
+
+# ==============================================================================
 class SimHit:
    """
-My PSimHit class
+My SimHit class
 """
 # constructor
    def __init__(self, psimhit=None):
@@ -138,7 +188,7 @@ class SimpleHits:
 My hits class, for emulated or reconstructed hits
 """
    # constructor
-   def __init__(self,simhits,bx_counter, bx_space=24.95, settings=None):
+   def __init__(self,simhits,bx_counter, bx_space=25., settings=None):
       self._threshold = 0.
       self._deadtime = 10.
       self._simhits = simhits
@@ -162,7 +212,7 @@ My hits class, for emulated or reconstructed hits
          print TextColor.WARNING + "*** warning *** : Cannot emulate hits without any simhits." + TextColor.EXEC
          return 0
          
-      time_in_orbit = self._bx_counter*self._bx_space - 6.1
+      time_in_orbit = self._bx_counter*self._bx_space - 5.17
       hits = []
       for ch in self._channels:
          total_energy = 0
@@ -186,5 +236,100 @@ My hits class, for emulated or reconstructed hits
       # end loop of channels
       return hits
       
+# ______________________________________________________________________________
+
+class PSimHit:
+   """
+My PSimHit class from flat ntuple
+"""
+# constructor
+   def __init__(self):
+      self._time_of_flight = -1.
+      self._energy_loss = -1.
+      self._channel = -1
+      self._track_id = -1
+      self._pdg_id = 0
+
+# set methods                    
+   def set_time_of_flight(self,value):
+      self._time_of_flight = value
+      
+   def set_energy_loss(self,value):
+      self._energy_loss = value
+      
+   def set_channel(self,value):
+      self._channel = value
+      
+   def set_track_id(self,value):
+      self._track_id = value
+      
+   def set_pdg_id(self,value):
+      self._pdg_id = value
+      
+# get methods         
+   def time_of_flight(self):
+      return self._time_of_flight
+      
+   def energy_loss(self):
+      return self._energy_loss
+      
+   def channel(self):
+      return self._channel
+      
+   def track_id(self):
+      return self._track_id
+      
+   def pdg_id(self):
+      return self._pdg_id
+      
+# CMSSW PSimHit-like get methods
+   def timeOfFlight(self):
+      return self._time_of_flight
+      
+   def energyLoss(self):
+      return self._energy_loss
+      
+   def detUnitId(self):
+      return self._channel
+      
+   def trackId(self):
+      return self._track_id
+      
+   def particleType(self):
+      return self._pdg_id
+      
+# ==============================================================================
+
+class PSimHitsCollection:
+
+   def __init__(self, event=None, **kwargs):
+      if not event:
+         raise RuntimeError, "No TCahin event given"
+      if len(kwargs):
+         raise RuntimeError, "Unknown arguments %s" % kwargs
          
+      self._event = event
+      self._entries = event.nhits
+      self._index = 0
+      
+   def __iter__ (self):
+      return self
+      
+   def next(self):
+      if self._index < self._entries:
+         index = self._index
          
+         psimhit = PSimHit()
+         psimhit.set_time_of_flight(self._event.time_of_flight[index])
+         psimhit.set_energy_loss(self._event.energy_loss[index])
+         psimhit.set_channel(self._event.det_id[index])
+         psimhit.set_track_id(self._event.track_id[index])
+         psimhit.set_pdg_id(self._event.particle_type[index])
+         
+         self._index += 1
+         return psimhit
+      else:
+         raise StopIteration()
+         
+     
+

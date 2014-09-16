@@ -7,6 +7,8 @@ import subprocess
 import re
 import glob
 
+from datetime import datetime
+
 # https://docs.python.org/2/library/optparse.html
 from optparse import OptionParser
 
@@ -14,7 +16,7 @@ sys.path.append( "lib" )
 from utils import MyOptionParser
 from utils import TextColor
 from utils import get_list_of_files
-from analyzers import EdmSimAnalyzer
+from analyzers import SimAnalyzer
 
 import ROOT
 
@@ -35,21 +37,23 @@ def main():
    
    # get list of files
    files = get_list_of_files( options.input )
+   
    max_events = options.max_events
    pileup = options.pileup
+   bx = options.bx
+   nscans = options.n_scans
    
-   analysis = EdmSimAnalyzer(files,maxEvents=max_events)
+   analysis = SimAnalyzer(files,maxEvents=max_events)
    analysis.set_pileup(pileup)
-#   analysis.set_bx(bx)
+   analysis.set_bx(bx)
+   analysis.set_vdm(nscans)
 #   analysis.set_bx_space(bx_space)
 
+   print str(datetime.now())
    analysis.analyze()
-   
-#   print hists["time"][2051]
-   
+   print str(datetime.now())
    
 #   tof_hist = hists["time"][2051]
-   
 #   c1 = ROOT.TCanvas()
 #   tof_hist.Draw()
 #   c1.Print ("tof_hist.png")

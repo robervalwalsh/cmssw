@@ -1,12 +1,16 @@
 from data_model import SimHit
 from data_model import SimpleHits
+from data_model import MyEvents
+from data_model import PSimHitsCollection
+from data_model import PSimHit
+
+import settings
 
 import ROOT
 
-fwlite = False
+
 try:
    from DataFormats.FWLite import Events, Handle
-   fwlite = True
 except ImportError:
    pass
 
@@ -64,9 +68,9 @@ def histograms_or(h1,h2,name=None):
 
 # ==========================================================
 
-class EdmSimAnalyzer:
+class SimAnalyzer:
    """
-   My EDM simulation analyzer
+   My PSimHits simulation analyzer
 """
    
 # ___________________________________________________________
@@ -82,12 +86,20 @@ class EdmSimAnalyzer:
       if kwargs.has_key ('maxEvents'):
          self._max_events = kwargs['maxEvents']
          del kwargs['maxEvents']
+      self._hist_add_type = ''
+      if kwargs.has_key ('histAddType'):
+         self._hist_add_type = kwargs['histAddType']
+         del kwargs['histAddType']
       if len(kwargs):
          raise RuntimeError, "Unknown arguments %s" % kwargs
-      self._handle = Handle ('std::vector<PSimHit>')
-      self._label = ('g4SimHits','BCM1FHits','SIM')
+      self._handle = ''
+      self._label = 'Bcm1fNtuple/PSimHits'
+      if settings.edm:
+         self._handle = Handle ('std::vector<PSimHit>')
+         self._label = ('g4SimHits','BCM1FHits','SIM')
       self._pileup = 0
       self._bx = 1
+      self._nscans = 1
       self._bx_space = 25.
       self._histograms = {}
       self._channels = []
@@ -96,24 +108,29 @@ class EdmSimAnalyzer:
       self.set_list_of_channels()
       self.set_histograms()
       # THE EVENTS!!!
-      if fwlite:
+      if settings.edm :
          self._events = Events(files_list,maxEvents=self._max_events)
       else:
-         self._events = None
+         self._events = MyEvents(files_list,self._label,maxEvents=self._max_events)
    
 # ___________________________________________________________
 
    def analyze(self):
       pileup_counter = 0
+      scan_counter = 1
       bx_counter = 1
       bx_space = self._bx_space
-      # loop over events
       simhits_bx = []  # list of simhits per bunch crossing
+
+      # loop over events
       for n,event in enumerate(self._events):
-         if n>0 and n%100==0: print n," events processed"
-         # use getByLabel, just like in cmsRun
-         event.getByLabel (self._label, self._handle)
-         psimhits = self._handle.product()
+         if n>0 and n%10000==0: print n," events processed"
+         if settings.edm:
+            # use getByLabel, just like in cmsRun
+            event.getByLabel (self._label, self._handle)
+            psimhits = self._handle.product()
+         else:
+            psimhits = PSimHitsCollection(event)
          for psimhit in psimhits:
             mysimhit = SimHit(psimhit)
             tof = mysimhit.time_of_flight()
@@ -129,7 +146,7 @@ class EdmSimAnalyzer:
          if bx_counter > self._bx:   # reached the desired number of bx in one orbit
             bx_counter = 1
          pileup_counter += 1
-         
+        
       # end of event loop
       self.save_histograms()
 
@@ -165,42 +182,43 @@ class EdmSimAnalyzer:
          self._histograms["eloss_time"][parity].Fill(eloss,time)
          
          h_aux_ch["temp"+str(ch)].Fill(time)
-      
-      # OR logics of main histos
-      h_aux = {}    # auxiliar histograms
-      for key in self._histograms["time"]:
-        if "main_" in str(key):
-           h_aux[key] = self._histograms["time"][key].Clone(key.replace("main","temp"))
-           h_aux[key].Reset()
-      for ch in self._channels:
-         c_channel = channel_characteristic(ch)
-         h = h_aux_ch["temp"+str(ch)]
-         name_h = "main_"+c_channel+"_or"
-         h_aux[name_h] = histograms_or(h_aux[name_h],h,name_h.replace("main","temp"))
          
-      # Other OR logics derived from main
-      # near_+z = odd_near_+z OR even_near_+z etc
-      h_aux["near_+z_or"] = histograms_or(h_aux["main_odd_near_+z_or"] , h_aux["main_even_near_+z_or"], "temp_near_+z_or")
-      h_aux["near_-z_or"] = histograms_or(h_aux["main_odd_near_-z_or"] , h_aux["main_even_near_-z_or"], "temp_near_-z_or")
-      h_aux["far_+z_or"]  = histograms_or(h_aux["main_odd_far_+z_or"]  , h_aux["main_even_far_+z_or"] , "temp_far_+z_or")
-      h_aux["far_-z_or"]  = histograms_or(h_aux["main_odd_far_-z_or"]  , h_aux["main_even_far_-z_or"] , "temp_far_-z_or")
-      h_aux["odd_+z_or"]  = histograms_or(h_aux["main_odd_near_+z_or"] , h_aux["main_odd_far_+z_or"]  , "temp_odd_+z_or")
-      h_aux["odd_-z_or"]  = histograms_or(h_aux["main_odd_near_-z_or"] , h_aux["main_odd_far_-z_or"]  , "temp_odd_-z_or")
-      h_aux["even_+z_or"] = histograms_or(h_aux["main_even_near_+z_or"], h_aux["main_even_far_+z_or"] , "temp_even_+z_or")
-      h_aux["even_-z_or"] = histograms_or(h_aux["main_even_near_-z_or"], h_aux["main_even_far_-z_or"] , "temp_even_-z_or")
-      h_aux["+z_or"]      = histograms_or(h_aux["far_+z_or"]           , h_aux["near_+z_or"]          , "temp_+z_or")
-      h_aux["-z_or"]      = histograms_or(h_aux["far_-z_or"]           , h_aux["near_-z_or"]          , "temp_-z_or")
-      h_aux["odd_or"]     = histograms_or(h_aux["odd_+z_or"]           , h_aux["even_+z_or"]          , "temp_odd_or")
-      h_aux["even_or"]    = histograms_or(h_aux["odd_-z_or"]           , h_aux["even_-z_or"]          , "temp_even_or")
-      h_aux["all_or"]     = histograms_or(h_aux["+z_or"]               , h_aux["-z_or"]               , "temp_all_or")
-
-      # sum to the accumulated histograms      
-      for key in h_aux:
-         self._histograms["time"][key].Add(h_aux[key])
+      if self._hist_add_type.lower() == 'or':
+         # OR logics of main histos
+         h_aux = {}    # auxiliar histograms
+         for key in self._histograms["time"]:
+           if "main_" in str(key):
+              h_aux[key] = self._histograms["time"][key].Clone(key.replace("main","temp"))
+              h_aux[key].Reset()
+         for ch in self._channels:
+            c_channel = channel_characteristic(ch)
+            h = h_aux_ch["temp"+str(ch)]
+            name_h = "main_"+c_channel+"_or"
+            h_aux[name_h] = histograms_or(h_aux[name_h],h,name_h.replace("main","temp"))
          
-#      for key in h_aux:
-#         print h_aux[key].GetName()
-#      print " =============== end of event ==========="
+         # Other OR logics derived from main
+         # near_+z = odd_near_+z OR even_near_+z etc
+         h_aux["near_+z_or"] = histograms_or(h_aux["main_odd_near_+z_or"] , h_aux["main_even_near_+z_or"], "temp_near_+z_or")
+         h_aux["near_-z_or"] = histograms_or(h_aux["main_odd_near_-z_or"] , h_aux["main_even_near_-z_or"], "temp_near_-z_or")
+         h_aux["far_+z_or"]  = histograms_or(h_aux["main_odd_far_+z_or"]  , h_aux["main_even_far_+z_or"] , "temp_far_+z_or")
+         h_aux["far_-z_or"]  = histograms_or(h_aux["main_odd_far_-z_or"]  , h_aux["main_even_far_-z_or"] , "temp_far_-z_or")
+         h_aux["odd_+z_or"]  = histograms_or(h_aux["main_odd_near_+z_or"] , h_aux["main_odd_far_+z_or"]  , "temp_odd_+z_or")
+         h_aux["odd_-z_or"]  = histograms_or(h_aux["main_odd_near_-z_or"] , h_aux["main_odd_far_-z_or"]  , "temp_odd_-z_or")
+         h_aux["even_+z_or"] = histograms_or(h_aux["main_even_near_+z_or"], h_aux["main_even_far_+z_or"] , "temp_even_+z_or")
+         h_aux["even_-z_or"] = histograms_or(h_aux["main_even_near_-z_or"], h_aux["main_even_far_-z_or"] , "temp_even_-z_or")
+         h_aux["+z_or"]      = histograms_or(h_aux["far_+z_or"]           , h_aux["near_+z_or"]          , "temp_+z_or")
+         h_aux["-z_or"]      = histograms_or(h_aux["far_-z_or"]           , h_aux["near_-z_or"]          , "temp_-z_or")
+         h_aux["odd_or"]     = histograms_or(h_aux["odd_+z_or"]           , h_aux["even_+z_or"]          , "temp_odd_or")
+         h_aux["even_or"]    = histograms_or(h_aux["odd_-z_or"]           , h_aux["even_-z_or"]          , "temp_even_or")
+         h_aux["all_or"]     = histograms_or(h_aux["+z_or"]               , h_aux["-z_or"]               , "temp_all_or")
+   
+         # sum to the accumulated histograms      
+         for key in h_aux:
+            self._histograms["time"][key].Add(h_aux[key])
+         
+#         for key in h_aux:
+#            print h_aux[key].GetName()
+#         print " =============== end of event ==========="
 
          
 # ___________________________________________________________
@@ -208,7 +226,8 @@ class EdmSimAnalyzer:
    def save_histograms(self):
       f = ROOT.TFile(self._outputfile, "recreate")
       f.mkdir("general")
-      f.mkdir("or_logics")
+      if self._hist_add_type.lower() == 'or':
+         f.mkdir("or_logics")
       f.mkdir("channels")
       for key1 in self._histograms.keys():
          for key2 in self._histograms[key1].keys():
@@ -259,6 +278,11 @@ class EdmSimAnalyzer:
       
 # ___________________________________________________________
 
+   def set_vdm(self,nscans=1):
+      self._nscans = nscans
+      
+# ___________________________________________________________
+
    def set_bx_space(self,bx_space=25):
       self._bx_space = bx_space
       
@@ -270,36 +294,15 @@ class EdmSimAnalyzer:
 # ___________________________________________________________
 
    def set_histograms(self):
+   
       bin = {}
-      bin["time"]  = {"n":14400,"min":0.,"max":90000.}
-      bin["eloss"] = {"n":100,   "min":0.,"max":0.001}
+#      bin["time"]  = {"n":14400,"min":0.,"max":90000.}  # 6.25ns binning
+      bin["time"]  = {"n":90000,"min":0.,"max":90000.}
+      bin["eloss"] = {"n":500,   "min":0.,"max":0.005}
       h_time = {}
       h_time["all"]       = ROOT.TH1F ("time_all",       "time in orbit (all channels)",       bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
       h_time["odd"]       = ROOT.TH1F ("time_odd",       "time in orbit (odd channels)",       bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
       h_time["even"]      = ROOT.TH1F ("time_even",      "time in orbit (even channels)",      bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-
-      h_time["all_or"]    = ROOT.TH1F ("time_all_or",    "time in orbit (or all channels)",    bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["odd_or"]    = ROOT.TH1F ("time_odd_or",    "time in orbit (or odd channels)",    bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["even_or"]   = ROOT.TH1F ("time_even_or",   "time in orbit (or even channels)",   bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["+z_or"]     = ROOT.TH1F ("time_+z_or",     "time in orbit (or +z channels)",     bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["-z_or"]     = ROOT.TH1F ("time_-z_or",     "time in orbit (or -z channels)",     bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["odd_+z_or"] = ROOT.TH1F ("time_odd_+z_or", "time in orbit (or odd +z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["odd_-z_or"] = ROOT.TH1F ("time_odd_-z_or", "time in orbit (or odd -z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["even_+z_or"]= ROOT.TH1F ("time_even_+z_or","time in orbit (or even +z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["even_-z_or"]= ROOT.TH1F ("time_even_-z_or","time in orbit (or even -z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["far_+z_or"] = ROOT.TH1F ("time_far_+z_or", "time in orbit (or far +z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["far_-z_or"] = ROOT.TH1F ("time_far_-z_or", "time in orbit (or far -z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["near_+z_or"]= ROOT.TH1F ("time_near_+z_or","time in orbit (or near +z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["near_-z_or"]= ROOT.TH1F ("time_near_-z_or","time in orbit (or near -z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-
-      h_time["main_odd_far_+z_or"]  = ROOT.TH1F ("time_odd_far_+z_or",  "time in orbit (or odd far +z channels)",  bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["main_odd_far_-z_or"]  = ROOT.TH1F ("time_odd_far_-z_or",  "time in orbit (or odd far -z channels)",  bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["main_even_far_+z_or"] = ROOT.TH1F ("time_even_far_+z_or", "time in orbit (or even far +z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["main_even_far_-z_or"] = ROOT.TH1F ("time_even_far_-z_or", "time in orbit (or even far -z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["main_odd_near_+z_or"] = ROOT.TH1F ("time_odd_near_+z_or", "time in orbit (or odd near +z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["main_odd_near_-z_or"] = ROOT.TH1F ("time_odd_near_-z_or", "time in orbit (or odd near -z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["main_even_near_+z_or"]= ROOT.TH1F ("time_even_near_+z_or","time in orbit (or even near +z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
-      h_time["main_even_near_-z_or"]= ROOT.TH1F ("time_even_near_-z_or","time in orbit (or even near -z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
 
       h_eloss = {}
       h_eloss["all"]  = ROOT.TH1F ("eloss_all",  "energy loss (all channels)",  bin["eloss"]["n"], bin["eloss"]["min"], bin["eloss"]["max"])
@@ -318,6 +321,31 @@ class EdmSimAnalyzer:
          h_name  = "eloss_"+str(channel)
          h_title = "energy loss (channel"+str(channel)+")"
          h_eloss[channel] = ROOT.TH1F (h_name, h_title, bin["eloss"]["n"], bin["eloss"]["min"], bin["eloss"]["max"])
+         
+      if self._hist_add_type.lower() == 'or':
+         h_time["all_or"]    = ROOT.TH1F ("time_all_or",    "time in orbit (or all channels)",    bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["odd_or"]    = ROOT.TH1F ("time_odd_or",    "time in orbit (or odd channels)",    bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["even_or"]   = ROOT.TH1F ("time_even_or",   "time in orbit (or even channels)",   bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["+z_or"]     = ROOT.TH1F ("time_+z_or",     "time in orbit (or +z channels)",     bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["-z_or"]     = ROOT.TH1F ("time_-z_or",     "time in orbit (or -z channels)",     bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["odd_+z_or"] = ROOT.TH1F ("time_odd_+z_or", "time in orbit (or odd +z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["odd_-z_or"] = ROOT.TH1F ("time_odd_-z_or", "time in orbit (or odd -z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["even_+z_or"]= ROOT.TH1F ("time_even_+z_or","time in orbit (or even +z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["even_-z_or"]= ROOT.TH1F ("time_even_-z_or","time in orbit (or even -z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["far_+z_or"] = ROOT.TH1F ("time_far_+z_or", "time in orbit (or far +z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["far_-z_or"] = ROOT.TH1F ("time_far_-z_or", "time in orbit (or far -z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["near_+z_or"]= ROOT.TH1F ("time_near_+z_or","time in orbit (or near +z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["near_-z_or"]= ROOT.TH1F ("time_near_-z_or","time in orbit (or near -z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+   
+         h_time["main_odd_far_+z_or"]  = ROOT.TH1F ("time_odd_far_+z_or",  "time in orbit (or odd far +z channels)",  bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["main_odd_far_-z_or"]  = ROOT.TH1F ("time_odd_far_-z_or",  "time in orbit (or odd far -z channels)",  bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["main_even_far_+z_or"] = ROOT.TH1F ("time_even_far_+z_or", "time in orbit (or even far +z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["main_even_far_-z_or"] = ROOT.TH1F ("time_even_far_-z_or", "time in orbit (or even far -z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["main_odd_near_+z_or"] = ROOT.TH1F ("time_odd_near_+z_or", "time in orbit (or odd near +z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["main_odd_near_-z_or"] = ROOT.TH1F ("time_odd_near_-z_or", "time in orbit (or odd near -z channels)", bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["main_even_near_+z_or"]= ROOT.TH1F ("time_even_near_+z_or","time in orbit (or even near +z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+         h_time["main_even_near_-z_or"]= ROOT.TH1F ("time_even_near_-z_or","time in orbit (or even near -z channels)",bin["time"]["n"], bin["time"]["min"], bin["time"]["max"])
+
       self._histograms["time"] = h_time
       self._histograms["eloss"] = h_eloss
       self._histograms["eloss_time"] = h_eloss_time

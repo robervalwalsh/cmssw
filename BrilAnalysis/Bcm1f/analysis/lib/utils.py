@@ -4,67 +4,101 @@ import glob
 # https://docs.python.org/2/library/optparse.html
 from optparse import OptionParser
 
+import settings
+
+das_client = False
 try:
    __import__('imp').find_module('das_client')
+   das_client = True
    # Make things with supposed existing module
 except ImportError:
    pass
 
 #import das_client  # for the cms dataset database
 
-
 # ==============================================================================
 
 class MyOptionParser:
-    """
+   """
 My option parser
 """
-    def __init__(self):
-        usage = "Usage: %prog [options]\n"
-        usage += "For more help..."
-        self.parser = OptionParser(usage=usage)
-        input_help = "Give the input data. Possible types are file:, dir: or dataset: (default, at DESY T2)."
-        self.parser.add_option("--input", action="store", type="string", default="",
-                               dest="input", help=input_help)
-        nevents_help = "Number of events to be processed. Default = -1 (all events)"
-        self.parser.add_option("--max_events", action="store", type="int", default=-1,
-                               dest="max_events", help=nevents_help)
-        pileup_help = "Number of pile-up events. Default = 0 (no pileup)"
-        self.parser.add_option("--pileup", action="store", type="int", default=0,
-                               dest="pileup", help=pileup_help)
-                               
-    def help(self):
-       print text_color.HELP
-       self.parser.print_help()
-       print text_color.EXEC
-    
-    def opt_status(self):
-       options, args = self.parser.parse_args()
-       if options.input == "" :
-          print text_color.WARNING + "*** warning *** : You must provide an input." + text_color.EXEC
-          self.help()
-          return 0
-       intype = "dataset"  # default
-       if ( ":" in options.input ):
-          intype = re.split(":",options.input)[0]
-       if intype != "file" and  intype != "dir" and intype != "dataset" :
-          print text_color.FAIL + "*** error *** : Input type not recognized." + text_color.EXEC
-          self.help()
-          return 0
-       return 1
-    
-    def get_opt(self):
-        """
+   def __init__(self):
+       usage = "Usage: %prog [options]\n"
+       usage += "For more help..."
+       self.parser = OptionParser(usage=usage)
+       input_help = "Give the input data with its type. Possible types are file: (default), dir: or dataset: (at DESY T2)."
+       self.parser.add_option("--input", action="store", type="string", default="",
+                              dest="input", help=input_help)
+       input_format_help = "Give the input data format. Possible types are edm or ntuple."
+       self.parser.add_option("--input_format", action="store", type="string", default="ntuple",
+                              dest="input_format", help=input_format_help)
+       nevents_help = "Number of events to be processed. Default = -1 (all events)"
+       self.parser.add_option("--max_events", action="store", type="int", default=-1,
+                              dest="max_events", help=nevents_help)
+       pileup_help = "Number of pile-up events. Default = 0 (no pileup)"
+       self.parser.add_option("--pileup", action="store", type="int", default=0,
+                              dest="pileup", help=pileup_help)
+       vdmscan_help = "Number of VdM scan points. Default = 1 (no scan)"
+       self.parser.add_option("--n_scans", action="store", type="int", default=1,
+                              dest="n_scans", help=vdmscan_help)
+       bx_help = "Number of bunch crossings. Default = 1"
+       self.parser.add_option("--bx", action="store", type="int", default=1,
+                              dest="bx", help=vdmscan_help)
+                              
+   def help(self):
+      print TextColor.HELP
+      self.parser.print_help()
+      print TextColor.EXEC
+   
+   def opt_status(self):
+      options, args = self.parser.parse_args()
+      if options.input == "" :
+         print TextColor.FAIL + "*** error *** : You must provide an input." + TextColor.EXEC
+         self.help()
+         return 0
+      intype = "file"  # default
+      if ":" in options.input:
+         intype = re.split(":",options.input)[0]
+      if intype != "file" and  intype != "dir" and intype != "dataset" :
+         print TextColor.FAIL + "*** error *** : Input type not recognized." + TextColor.EXEC
+         self.help()
+         return 0
+      
+      if intype == "dataset":   # dataset is always edm
+         options.input_format = "edm"
+      format = options.input_format
+      settings.edm = format == "edm"
+         
+      
+      if format != "edm" and format != "ntuple":
+         print TextColor.FAIL + "*** error *** : Input format not recognized." + TextColor.EXEC
+         self.help()
+         return 0
+      if format == "edm" and not settings.fwlite:
+         print TextColor.FAIL + "*** error *** : FWLite must be setup to run on EDM files." + TextColor.EXEC
+         self.help()
+         return 0
+         
+      if intype == "dataset" and not das_client:
+         print TextColor.FAIL + "*** error *** : Cannot load das_client.py. Check your environment settings." + TextColor.EXEC
+         self.help()
+         return 0
+         
+         
+      return 1
+   
+   def get_opt(self):
+       """
 Returns parse list of options
 """
-        return self.parser.parse_args()
+       return self.parser.parse_args()
 
 # ______________________________________________________________________________
 
 # Get the list of files to be analysed according to the input give by the user
 def get_list_of_files( opt_input ):
    
-   intype = "dataset"  # default
+   intype = "file"  # default
    indata = [opt_input]
    if ( ":" in opt_input ):
       split_input = re.split(":",opt_input)
