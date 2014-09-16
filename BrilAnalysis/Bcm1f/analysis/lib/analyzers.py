@@ -110,8 +110,13 @@ class SimAnalyzer:
       # THE EVENTS!!!
       if settings.edm :
          self._events = Events(files_list,maxEvents=self._max_events)
+         if self._max_events >= 0: self._entries = self._max_events
+         else: self._entries = self._events.size()
       else:
          self._events = MyEvents(files_list,self._label,maxEvents=self._max_events)
+         self._entries = self._events._entries
+         
+      print self._entries
    
 # ___________________________________________________________
 
@@ -121,6 +126,8 @@ class SimAnalyzer:
       bx_counter = 1
       bx_space = self._bx_space
       simhits_bx = []  # list of simhits per bunch crossing
+      
+      scan_events = round(float(self._entries)/float(self._nscans))
 
       # loop over events
       for n,event in enumerate(self._events):
@@ -146,9 +153,12 @@ class SimAnalyzer:
          if bx_counter > self._bx:   # reached the desired number of bx in one orbit
             bx_counter = 1
          pileup_counter += 1
+         if n > scan_events*scan_counter or n == self._entries-1:
+            self.save_histograms(scan_counter)
+            scan_counter += 1
         
       # end of event loop
-      self.save_histograms()
+#      self.save_histograms()
 
 
 # ___________________________________________________________
@@ -223,20 +233,26 @@ class SimAnalyzer:
          
 # ___________________________________________________________
 
-   def save_histograms(self):
-      f = ROOT.TFile(self._outputfile, "recreate")
-      f.mkdir("general")
+   def save_histograms(self,scan):
+      scandir = ""
+      if self._nscans > 1:
+         scandir = "scan_"+str(scan)+"/"
+      if scan == 1:
+         f = ROOT.TFile(self._outputfile, "recreate")
+      else:
+         f = ROOT.TFile(self._outputfile, "update")
+      f.mkdir(scandir+"general")
       if self._hist_add_type.lower() == 'or':
-         f.mkdir("or_logics")
-      f.mkdir("channels")
+         f.mkdir(scandir+"or_logics")
+      f.mkdir(scandir+"channels")
       for key1 in self._histograms.keys():
          for key2 in self._histograms[key1].keys():
             if type(key2) == int:
-               f.cd("channels")
+               f.cd(scandir+"channels")
             elif "or" in key2:
-               f.cd("or_logics")
+               f.cd(scandir+"or_logics")
             else:
-               f.cd("general")
+               f.cd(scandir+"general")
             self._histograms[key1][key2].Write()
       
 #      for key in self._histograms["time"].keys():
@@ -245,6 +261,15 @@ class SimAnalyzer:
 
       f.Write()
       f.Close()
+      self.clear_histograms()
+      
+# ___________________________________________________________
+
+   def clear_histograms(self):
+      for key1 in self._histograms.keys():
+         for key2 in self._histograms[key1].keys():
+            self._histograms[key1][key2].Reset()
+      
       
 # ___________________________________________________________
 
