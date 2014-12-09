@@ -44,6 +44,9 @@ My option parser
        bx_help = "Number of bunch crossings. Default = 1"
        self.parser.add_option("--bx", action="store", type="int", default=1,
                               dest="bx", help=vdmscan_help)
+       output_file_help = "Name of the output file. Default = simrates_histograms.root"
+       self.parser.add_option("--output_file", action="store", type="string", default="simrates_histograms.root",
+                              dest="output_file", help=output_file_help)
                               
    def help(self):
       print TextColor.HELP

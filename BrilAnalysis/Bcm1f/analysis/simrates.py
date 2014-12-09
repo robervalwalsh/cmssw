@@ -42,11 +42,13 @@ def main():
    pileup = options.pileup
    bx = options.bx
    nscans = options.n_scans
+   output = options.output_file
    
    analysis = SimAnalyzer(files,maxEvents=max_events)
    analysis.set_pileup(pileup)
    analysis.set_bx(bx)
    analysis.set_vdm(nscans)
+   analysis.set_output_file(output)
 #   analysis.set_bx_space(bx_space)
 
    print str(datetime.now())

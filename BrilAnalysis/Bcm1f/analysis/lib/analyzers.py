@@ -103,7 +103,7 @@ class SimAnalyzer:
       self._bx_space = 25.
       self._histograms = {}
       self._channels = []
-      self._outputfile = "simrates_histograms.root"
+      self.set_output_file()
       # Create histograms, etc.
       self.set_list_of_channels()
       self.set_histograms()
@@ -261,11 +261,11 @@ class SimAnalyzer:
 
       f.Write()
       f.Close()
-      self.clear_histograms()
+      self.reset_histograms()
       
 # ___________________________________________________________
 
-   def clear_histograms(self):
+   def reset_histograms(self):
       for key1 in self._histograms.keys():
          for key2 in self._histograms[key1].keys():
             self._histograms[key1][key2].Reset()
@@ -275,6 +275,13 @@ class SimAnalyzer:
 
    def histograms(self):
       return self._histograms
+      
+      
+# ___________________________________________________________
+
+   def set_output_file(self,filename="simrates_histograms.root"):
+      self._outputfile = filename
+      
       
 # ___________________________________________________________
 
@@ -313,10 +320,6 @@ class SimAnalyzer:
       
 # ___________________________________________________________
 
-   def set_outputfile(self,filename):
-      self._outputfile = filename
-      
-# ___________________________________________________________
 
    def set_histograms(self):
    
