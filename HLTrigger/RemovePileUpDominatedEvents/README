@@ -1,0 +1,21 @@
+Hi Roberval,
+to avoid the pile-up rate double counting, you have to download this code
+
+git clone git@github.com:cms-steam/RemovePileUpDominatedEvents.git RemovePileUpDominatedEvents
+scram b
+
+and then you have to add this filter in your HLT configuration
+
+process.RemovePileUpDominatedEventsGen = cms.EDFilter("RemovePileUpDominatedEventsGen")
+
+and finally add it in your path (for instance in your HLTBeginSequence):
+
+process.HLTBeginSequence = ( .... + process.RemovePileUpDominatedEventsGen )
+
+
+I didn't test this recipes since a while, sorry if you get errors!
+The filter rejects events with having a PU collision with pt-hat greater than the QCD collision pt-hat.
+
+You can see quickly the problem thinking about the ZeroBias trigger.
+If you evaluate the ZeroBias trigger rate using the formula L*cross-section, you would get ~ 40 (pile-up)
+* 40 MHz instead of 40MHz (there is a double counting due to pile-up)
