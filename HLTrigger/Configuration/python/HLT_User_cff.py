@@ -1,5 +1,9 @@
 # /dev/CMSSW_8_0_0/GRun/V254 (CMSSW_8_0_24)
 
+# Filter set to False in the EDFilter modules
+#    hltFastPVPixelVertexFilter
+#    hltFastPVPixelVerticesFilter
+
 import FWCore.ParameterSet.Config as cms
 
 fragment = cms.ProcessFragment( "HLT" )
@@ -5031,7 +5035,7 @@ fragment.hltFastPrimaryVertex = cms.EDProducer( "FastPrimaryVertexWithWeightsPro
     zClusterSearchArea_step2 = cms.double( 3.0 )
 )
 fragment.hltFastPVPixelVertexFilter = cms.EDFilter( "VertexSelector",
-    filter = cms.bool( True ),
+    filter = cms.bool( False ),
     src = cms.InputTag( "hltFastPrimaryVertex" ),
     cut = cms.string( "!isFake && ndof > 0 && abs(z) <= 25 && position.Rho <= 2" )
 )
@@ -5212,7 +5216,7 @@ fragment.hltFastPVPixelVertices = cms.EDProducer( "PixelVertexProducer",
     ZSeparation = cms.double( 0.07 )
 )
 fragment.hltFastPVPixelVerticesFilter = cms.EDFilter( "VertexSelector",
-    filter = cms.bool( True ),
+    filter = cms.bool( False ),
     src = cms.InputTag( "hltFastPVPixelVertices" ),
     cut = cms.string( "!isFake && ndof > 0 && abs(z) <= 25 && position.Rho <= 2" )
 )
