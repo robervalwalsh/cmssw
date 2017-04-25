@@ -1,4 +1,4 @@
-This branch is built as follows (see https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideGlobalHLT?rev=2998)
+This branch can be built as follows (see https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideGlobalHLT?rev=3001)
 
 cmsrel CMSSW_9_0_2
 cd CMSSW_9_0_2/src
@@ -10,10 +10,11 @@ git cms-addpkg HLTrigger/Configuration
 git cms-checkdeps -A -a
 git cms-merge-topic cms-tsg-storm:for83Xsamples
 git cms-merge-topic cms-tsg-storm:fixHltIntegrationTests
+git cms-merge-topic cms-tsg-storm:FastTimerService_90x_stable_v2
 
 scram b -j4
 
-git checkout -b from-CMSSW_9_0_2-hlt-rev2998
-git push --set-upstream my-cmssw from-CMSSW_9_0_2-hlt-rev2998
+git checkout -b from-CMSSW_9_0_2-hlt-rev3001
+git push --set-upstream my-cmssw from-CMSSW_9_0_2-hlt-rev3001
 
 Introduction to CMSSW: http://cms-sw.github.io
