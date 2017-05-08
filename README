@@ -1,3 +1,138 @@
 Introduction to CMSSW: http://cms-sw.github.io
 
 
+The packages needed for this branch
+
+Calibration:
+total 4
+drwxr-xr-x 8 walsh 2048 May  3 19:32 HcalCalibAlgos
+drwxr-xr-x 8 walsh 2048 May  3 19:32 IsolatedParticles
+
+CaloOnlineTools:
+total 2
+drwxr-xr-x 10 walsh 2048 May  3 19:32 EcalTools
+
+CommonTools:
+total 2
+drwxr-xr-x 6 walsh 2048 May  3 19:32 TriggerUtils
+
+CondCore:
+total 8
+drwxr-xr-x  5 walsh 2048 May  3 19:32 EcalPlugins
+drwxr-xr-x  3 walsh 2048 May  3 19:32 L1TPlugins
+drwxr-xr-x  4 walsh 2048 May  3 19:32 SiStripPlugins
+drwxr-xr-x 10 walsh 2048 May  3 19:32 Utilities
+
+CondFormats:
+total 2
+drwxr-xr-x 6 walsh 2048 May  3 19:23 L1TObjects
+
+CondTools:
+total 2
+drwxr-xr-x 8 walsh 2048 May  3 19:32 L1Trigger
+
+Configuration:
+total 10
+drwxr-xr-x 4 walsh 2048 May  3 19:31 Applications
+drwxr-xr-x 4 walsh 2048 May  3 19:32 DataProcessing
+drwxr-xr-x 7 walsh 2048 May  3 19:32 PyReleaseValidation
+drwxr-xr-x 6 walsh 2048 May  3 19:32 Skimming
+drwxr-xr-x 4 walsh 2048 May  3 19:31 StandardSequences
+
+DPGAnalysis:
+total 2
+drwxr-xr-x 6 walsh 2048 May  3 19:32 Skims
+
+DQM:
+total 38
+drwxr-xr-x 6 walsh 2048 May  3 19:32 EcalMonitorTasks
+drwxr-xr-x 5 walsh 2048 May  3 19:33 Integration
+drwxr-xr-x 8 walsh 2048 May  3 19:33 L1TMonitor
+drwxr-xr-x 5 walsh 2048 May  3 19:33 Phase2OuterTracker
+drwxr-xr-x 7 walsh 2048 May  3 19:33 Physics
+drwxr-xr-x 5 walsh 2048 May  3 19:33 SiPixelPhase1Clusters
+drwxr-xr-x 6 walsh 2048 May  3 19:33 SiPixelPhase1Common
+drwxr-xr-x 5 walsh 2048 May  3 19:33 SiPixelPhase1Digis
+drwxr-xr-x 5 walsh 2048 May  3 19:33 SiPixelPhase1RawData
+drwxr-xr-x 5 walsh 2048 May  3 19:33 SiPixelPhase1RecHits
+drwxr-xr-x 5 walsh 2048 May  3 19:33 SiPixelPhase1TrackClusters
+drwxr-xr-x 5 walsh 2048 May  3 19:33 SiPixelPhase1TrackEfficiency
+drwxr-xr-x 5 walsh 2048 May  3 19:33 SiPixelPhase1TrackResiduals
+drwxr-xr-x 7 walsh 2048 May  3 19:33 SiStripMonitorCluster
+drwxr-xr-x 7 walsh 2048 May  3 19:33 SiStripMonitorTrack
+drwxr-xr-x 9 walsh 2048 May  3 19:33 TrackerCommon
+drwxr-xr-x 6 walsh 2048 May  3 19:33 TrackerMonitorTrack
+drwxr-xr-x 7 walsh 2048 May  3 19:33 TrackingMonitor
+drwxr-xr-x 6 walsh 2048 May  3 19:33 TrigXMonitor
+
+DQMOffline:
+total 8
+drwxr-xr-x 8 walsh 2048 May  3 19:33 JetMET
+drwxr-xr-x 6 walsh 2048 May  3 19:33 L1Trigger
+drwxr-xr-x 8 walsh 2048 May  3 19:33 Muon
+drwxr-xr-x 9 walsh 2048 May  3 19:33 Trigger
+
+DataFormats:
+total 2
+drwxr-xr-x 6 walsh 2048 May  3 19:33 PatCandidates
+
+EventFilter:
+total 4
+drwxr-xr-x 7 walsh 2048 May  3 19:33 L1GlobalTriggerRawToDigi
+drwxr-xr-x 8 walsh 2048 May  3 19:23 L1TRawToDigi
+
+Geometry:
+total 4
+drwxr-xr-x 7 walsh 2048 May  3 19:31 TrackerCommonData
+drwxr-xr-x 8 walsh 2048 May  3 19:31 TrackerGeometryBuilder
+
+HLTrigger:
+total 10
+drwxr-xr-x 8 walsh 2048 May  3 19:31 Configuration
+drwxr-xr-x 7 walsh 2048 May  3 19:33 HLTanalyzers
+drwxr-xr-x 7 walsh 2048 May  3 19:33 HLTcore
+drwxr-xr-x 6 walsh 2048 May  3 19:33 HLTfilters
+drwxr-xr-x 5 walsh 2048 May  3 19:33 JSONMonitoring
+
+L1Trigger:
+total 24
+drwxr-xr-x 8 walsh 2048 May  3 19:33 CSCTrackFinder
+drwxr-xr-x 4 walsh 2048 May  3 19:23 Configuration
+drwxr-xr-x 7 walsh 2048 May  3 19:23 DTTrackFinder
+drwxr-xr-x 7 walsh 2048 May  3 19:33 GlobalTrigger
+drwxr-xr-x 8 walsh 2048 May  3 19:33 GlobalTriggerAnalyzer
+drwxr-xr-x 6 walsh 2048 May  3 19:23 L1TCaloLayer1
+drwxr-xr-x 9 walsh 2048 May  3 19:24 L1TCalorimeter
+drwxr-xr-x 9 walsh 2048 May  3 19:23 L1TCommon
+drwxr-xr-x 9 walsh 2048 May  3 19:24 L1TGlobal
+drwxr-xr-x 8 walsh 2048 May  3 19:24 L1TMuon
+drwxr-xr-x 9 walsh 2048 May  3 19:24 L1TNtuples
+drwxr-xr-x 5 walsh 2048 May  3 19:33 Skimmer
+
+L1TriggerConfig:
+total 6
+drwxr-xr-x 7 walsh 2048 May  3 19:33 L1GtConfigProducers
+drwxr-xr-x 4 walsh 2048 May  3 19:24 L1TConfigProducers
+drwxr-xr-x 4 walsh 2048 May  3 19:33 Utilities
+
+PhysicsTools:
+total 10
+drwxr-xr-x 8 walsh 2048 May  3 19:33 PatAlgos
+drwxr-xr-x 9 walsh 2048 May  3 19:33 PatExamples
+drwxr-xr-x 7 walsh 2048 May  3 19:33 PatUtils
+drwxr-xr-x 8 walsh 2048 May  3 19:33 SelectorUtils
+drwxr-xr-x 7 walsh 2048 May  3 19:33 TagAndProbe
+
+RecoLocalTracker:
+total 2
+drwxr-xr-x 6 walsh 2048 May  3 19:33 SiPixelClusterizer
+
+SimTracker:
+total 2
+drwxr-xr-x 6 walsh 2048 May  3 19:33 SiPixelDigitizer
+
+Validation:
+total 6
+drwxr-xr-x 8 walsh 2048 May  3 19:33 RecoTau
+drwxr-xr-x 8 walsh 2048 May  3 19:33 RecoVertex
+drwxr-xr-x 8 walsh 2048 May  3 19:33 TrackerRecHits
