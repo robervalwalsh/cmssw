@@ -35,7 +35,8 @@ int SiStripLAMonitorConfig(int argc, char * argv[])
       po::options_description desc("Options");
       desc.add_options()
          ("help,h","Show help messages")
-         ("config,c",po::value<std::string>(&cfg_),"Configuration file name");
+         ("config,c",po::value<std::string>(&cfg_),"Configuration file name")
+         ("run,r",po::value<int>(&run_),"Run number");
       
       po::options_description config("Configuration");
       config.add_options()
@@ -43,7 +44,7 @@ int SiStripLAMonitorConfig(int argc, char * argv[])
          ("InputFile",po::value <std::string> (&inputFile_)->default_value(""),"Given input file")
          ("CalibTreeDirectory",po::value <std::string> (&calibTreeDir_)->default_value("/eos/cms/store/group/dpg_tracker_strip/comm_tracker/Strip/Calibration/calibrationtree/GR17_Aag/"),"Direcotry of the calibTree files")
          ("OutputFile",po::value <std::string> (&outputfile_)->default_value("SiStripLAMonitor.root"),"Name of the root output file")
-         ("Run",po::value <int> (&run_)->default_value(302031), "Run number")
+         ("Run",po::value <int> (&run_), "Run number")
          ("EntriesMax",po::value <int> (&nentriesmax_)->default_value(-1), "Maximum number of events")
          ("SaveHistograms",po::value <bool> (&saveHistos_)->default_value(true), "Save histograms")
          ("CalibrationMode",po::value <std::string> (&calibrationMode_)->default_value("StdBunch"),"Calibration mode")
