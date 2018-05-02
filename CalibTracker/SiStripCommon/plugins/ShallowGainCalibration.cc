@@ -34,9 +34,7 @@ ShallowGainCalibration::ShallowGainCalibration(const edm::ParameterSet& iConfig)
   produces <std::vector<float> >          ( Prefix + "BdotY"          + Suffix );
   produces <std::vector<float> >          ( Prefix + "localB"         + Suffix );
   produces <std::vector<float> >          ( Prefix + "variance"       + Suffix );
-  produces <std::vector<float> >          ( Prefix + "driftx"         + Suffix );
-  produces <std::vector<float> >          ( Prefix + "drifty"         + Suffix );
-  produces <std::vector<float> >          ( Prefix + "driftz"         + Suffix );
+  produces <std::vector<float> >          ( Prefix + "dxoverdz"         + Suffix );
   produces <std::vector<float> >          ( Prefix + "globalZofunitlocalY" + Suffix );  
   
 }
@@ -62,9 +60,7 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   auto         BdotY         = std::make_unique<std::vector<float>>          ();
   auto         localB        = std::make_unique<std::vector<float>>          ();
   auto         variance      = std::make_unique<std::vector<float>>          ();
-  auto         driftx        = std::make_unique<std::vector<float>>          ();
-  auto         drifty        = std::make_unique<std::vector<float>>          ();
-  auto         driftz        = std::make_unique<std::vector<float>>          ();
+  auto         dxoverdz        = std::make_unique<std::vector<float>>          ();
   auto         globalZofunitlocalY = std::make_unique<std::vector<float>>    ();
 
   
@@ -133,9 +129,7 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             float                   locb  = -999;
             float                   myvariance = -999;
             float                   globalzy = -999;
-            float                   mydriftx = -999;
-            float                   mydrifty = -999;
-            float                   mydriftz = -999;
+            float                   dxdz = -999;
 
             if(StripCluster){
                const auto           &  Ampls          = StripCluster->amplitudes();
@@ -181,9 +175,10 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                 bdoty      = (theStripDet->surface()).toLocal( magfield->inTesla(theStripDet->surface().position())).y();
                 locb       = magfield->inTesla(theStripDet->surface().position()).mag() ;
                 myvariance = info.variance();
-                mydriftx   = drift.x();
-                mydrifty   = drift.y();
-                mydriftz   = drift.z();
+                if ( drift.z() != 0 )
+                {
+                   dxdz   = drift.x()/drift.z();
+                }
                 globalzy   = (theStripDet->toGlobal(LocalVector(0,1,0))).z();
 
             }else if(PixelCluster){
@@ -221,14 +216,11 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             BdotY->push_back( bdoty ); 
             localB->push_back( locb );
             variance-> push_back(myvariance);
-            driftx->push_back( mydriftx );
-            drifty->push_back( mydrifty );
-            driftz->push_back( mydriftz );
+            dxoverdz->push_back( dxdz );
             globalZofunitlocalY->push_back( globalzy );
 
           }
        }
-//       std::cout << "-----" << std::endl;
   }
 
   iEvent.put(std::move(trackindex),    Prefix + "trackindex"    + Suffix );
@@ -250,9 +242,7 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(std::move(BdotY),         Prefix + "BdotY"         + Suffix );
   iEvent.put(std::move(localB),        Prefix + "localB"        + Suffix );
   iEvent.put(std::move(variance),      Prefix + "variance"      + Suffix );
-  iEvent.put(std::move(driftx),        Prefix + "driftx"        + Suffix );
-  iEvent.put(std::move(drifty),        Prefix + "drifty"        + Suffix );
-  iEvent.put(std::move(driftz),        Prefix + "driftz"        + Suffix );
+  iEvent.put(std::move(dxoverdz),      Prefix + "dxoverdz"      + Suffix );
   iEvent.put(std::move(globalZofunitlocalY), Prefix + "globalZofunitlocalY" + Suffix );  
 }
 
