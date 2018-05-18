@@ -27,21 +27,35 @@ ShallowLorentzAngleRunProducer::ShallowLorentzAngleRunProducer(const edm::Parame
   :  Suffix ( iConfig.getParameter<std::string>("Suffix") ),
      Prefix ( iConfig.getParameter<std::string>("Prefix") )
 {
-   produces <std::vector<unsigned int> >   ( Prefix + "rawid"               + Suffix );
-   produces <std::vector<float> >          ( Prefix + "BdotY"               + Suffix );
-   produces <std::vector<float> >          ( Prefix + "localB"              + Suffix );
-   produces <std::vector<float> >          ( Prefix + "globalZofunitlocalY" + Suffix );  
-   produces <std::vector<float> >          ( Prefix + "lorentzAngle"        + Suffix );  
-   produces <std::vector<float> >          ( Prefix + "driftx"         + Suffix );
-   produces <std::vector<float> >          ( Prefix + "drifty"         + Suffix );
-   produces <std::vector<float> >          ( Prefix + "driftz"         + Suffix );
+   produces <std::vector<unsigned int>,edm::Transition::EndRun >   ( Prefix + "rawid"               + Suffix );
+   produces <std::vector<float>,edm::Transition::EndRun >          ( Prefix + "BdotY"               + Suffix );
+   produces <std::vector<float>,edm::Transition::EndRun >          ( Prefix + "localB"              + Suffix );
+   produces <std::vector<float>,edm::Transition::EndRun >          ( Prefix + "globalZofunitlocalY" + Suffix );  
+   produces <std::vector<float>,edm::Transition::EndRun >          ( Prefix + "lorentzAngle"        + Suffix );  
+   produces <std::vector<float>,edm::Transition::EndRun >          ( Prefix + "driftx"         + Suffix );
+   produces <std::vector<float>,edm::Transition::EndRun >          ( Prefix + "drifty"         + Suffix );
+   produces <std::vector<float>,edm::Transition::EndRun >          ( Prefix + "driftz"         + Suffix );
   
 }
 
+ShallowLorentzAngleRunProducer::~ShallowLorentzAngleRunProducer()
+{
+}
+
+
 void ShallowLorentzAngleRunProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-   if ( ! newRun ) return;
+//   if ( ! newRun ) return;
 
+   
+//   newRun = false;
+}
+
+// ------------ method called when starting to processes a run  ------------
+
+// ------------ method called when ending the processing of a run  ------------
+void ShallowLorentzAngleRunProducer::endRunProduce(edm::Run & run, edm::EventSetup const& iSetup)
+{
    auto         rawid         = std::make_unique<std::vector<unsigned int>>   ();
    auto         BdotY         = std::make_unique<std::vector<float>>          ();
    auto         localB        = std::make_unique<std::vector<float>>          ();
@@ -94,27 +108,14 @@ void ShallowLorentzAngleRunProducer::produce(edm::Event& iEvent, const edm::Even
       }
    }
 
-   iEvent.put(std::move(rawid),         Prefix + "rawid"         + Suffix );
-   iEvent.put(std::move(BdotY),         Prefix + "BdotY"         + Suffix );
-   iEvent.put(std::move(localB),        Prefix + "localB"        + Suffix );
-   iEvent.put(std::move(driftx),        Prefix + "driftx"        + Suffix );
-   iEvent.put(std::move(drifty),        Prefix + "drifty"        + Suffix );
-   iEvent.put(std::move(driftz),        Prefix + "driftz"        + Suffix );
-   iEvent.put(std::move(globalZofunitlocalY), Prefix + "globalZofunitlocalY" + Suffix );  
-   iEvent.put(std::move(lorentzAngle), Prefix + "lorentzAngle" + Suffix );  
+//    run.put(std::move(rawid),         Prefix + "rawid"         + Suffix );
+//    run.put(std::move(BdotY),         Prefix + "BdotY"         + Suffix );
+//    run.put(std::move(localB),        Prefix + "localB"        + Suffix );
+//    run.put(std::move(driftx),        Prefix + "driftx"        + Suffix );
+//    run.put(std::move(drifty),        Prefix + "drifty"        + Suffix );
+//    run.put(std::move(driftz),        Prefix + "driftz"        + Suffix );
+//    run.put(std::move(globalZofunitlocalY), Prefix + "globalZofunitlocalY" + Suffix );  
+//    run.put(std::move(lorentzAngle), Prefix + "lorentzAngle" + Suffix );  
    
-   newRun = false;
-}
-
-// ------------ method called when starting to processes a run  ------------
-
-void ShallowLorentzAngleRunProducer::beginRun(edm::Run const&, edm::EventSetup const&)
-{
-   newRun = true;
-}
- 
-// ------------ method called when ending the processing of a run  ------------
-void ShallowLorentzAngleRunProducer::endRun(edm::Run const&, edm::EventSetup const&)
-{
 }
 
