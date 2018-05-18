@@ -18,7 +18,17 @@ LorentzAngleOutputCommands =  [ 'keep *_shallowClusters_clusterdetid_*',
 laCalibrationTree = cms.EDAnalyzer("ShallowTree", outputCommands = cms.untracked.vstring('drop *'))
 laCalibrationTree.outputCommands += LorentzAngleOutputCommands
 
+# ESProducer
 LorentzAngleNtuple = cms.Sequence( (shallowClusters +
                                     shallowTrackClusters) *
                                    laCalibrationTree
                                    )
+
+from CalibTracker.SiStripLorentzAngle.ShallowLorentzAngleESProducer_cfi import *
+
+LorentzAngleOutputCommands =  [ 'keep *_shallowLorentzAngleESProducer_*_*',]
+
+lorentzAngleESTree = cms.EDAnalyzer("ShallowTree", outputCommands = cms.untracked.vstring('drop *'))
+lorentzAngleESTree.outputCommands += LorentzAngleOutputCommands
+
+LorentzAngleESNtuple = cms.Sequence( shallowLorentzAngleESProducer *  lorentzAngleESTree)
