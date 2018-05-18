@@ -1,15 +1,29 @@
-#include "CalibTracker/SiStripLorentzAngle/interface/ShallowLorentzAngleESProducer.h"
-#include "CalibFormats/SiStripObjects/interface/SiStripGain.h" 
+#include "CalibTracker/SiStripLorentzAngle/interface/ShallowLorentzAngleRunProducer.h"
 #include "CalibTracker/Records/interface/SiStripGainRcd.h"  
-#include "RecoLocalTracker/SiStripClusterizer/interface/SiStripClusterInfo.h"
+
+#include "CalibTracker/SiStripCommon/interface/ShallowTools.h"
+
+#include "MagneticField/Engine/interface/MagneticField.h"
+#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 #include "CondFormats/SiStripObjects/interface/SiStripLorentzAngle.h"
 #include "CondFormats/DataRecord/interface/SiStripLorentzAngleRcd.h"
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
+#include "Geometry/TrackerGeometryBuilder/interface/StripGeomDetUnit.h"
+#include "FWCore/Framework/interface/ESHandle.h"
+
+#include "Geometry/CommonDetUnit/interface/GeomDet.h"
+#include "Geometry/CommonDetUnit/interface/GeomDetType.h"
+
+#include "Geometry/TrackerNumberingBuilder/interface/GeometricDet.h"
+#include "Geometry/CommonDetUnit/interface/TrackingGeometry.h"
+
 
 using namespace edm;
 using namespace reco;
 using namespace std;
 
-ShallowLorentzAngleESProducer::ShallowLorentzAngleESProducer(const edm::ParameterSet& iConfig)
+ShallowLorentzAngleRunProducer::ShallowLorentzAngleRunProducer(const edm::ParameterSet& iConfig)
   :  Suffix ( iConfig.getParameter<std::string>("Suffix") ),
      Prefix ( iConfig.getParameter<std::string>("Prefix") )
 {
@@ -24,8 +38,10 @@ ShallowLorentzAngleESProducer::ShallowLorentzAngleESProducer(const edm::Paramete
   
 }
 
-void ShallowLorentzAngleESProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
+void ShallowLorentzAngleRunProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+   if ( ! newRun ) return;
+
    auto         rawid         = std::make_unique<std::vector<unsigned int>>   ();
    auto         BdotY         = std::make_unique<std::vector<float>>          ();
    auto         localB        = std::make_unique<std::vector<float>>          ();
@@ -41,8 +57,7 @@ void ShallowLorentzAngleESProducer::produce(edm::Event& iEvent, const edm::Event
    edm::ESHandle<SiStripLorentzAngle> SiStripLorentzAngle;    iSetup.get<SiStripLorentzAngleDepRcd>().get(SiStripLorentzAngle);      
 
    auto dets = theTrackerGeometry -> detsTIB();
-   std::cout << "In TIB there are " << dets.size() << " detectors" << std::endl;
-//   for ( size_t xx = 0; xx < dets.size() ; ++xx )
+   dets.insert(dets.end(),(theTrackerGeometry -> detsTOB()).begin(),(theTrackerGeometry -> detsTOB()).end());
    for ( auto det : dets )
    {
       float    bdoty = -999;
@@ -87,5 +102,19 @@ void ShallowLorentzAngleESProducer::produce(edm::Event& iEvent, const edm::Event
    iEvent.put(std::move(driftz),        Prefix + "driftz"        + Suffix );
    iEvent.put(std::move(globalZofunitlocalY), Prefix + "globalZofunitlocalY" + Suffix );  
    iEvent.put(std::move(lorentzAngle), Prefix + "lorentzAngle" + Suffix );  
+   
+   newRun = false;
+}
+
+// ------------ method called when starting to processes a run  ------------
+
+void ShallowLorentzAngleRunProducer::beginRun(edm::Run const&, edm::EventSetup const&)
+{
+   newRun = true;
+}
+ 
+// ------------ method called when ending the processing of a run  ------------
+void ShallowLorentzAngleRunProducer::endRun(edm::Run const&, edm::EventSetup const&)
+{
 }
 
