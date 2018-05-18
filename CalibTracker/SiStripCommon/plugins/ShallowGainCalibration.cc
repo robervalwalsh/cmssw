@@ -2,8 +2,6 @@
 #include "CalibFormats/SiStripObjects/interface/SiStripGain.h" 
 #include "CalibTracker/Records/interface/SiStripGainRcd.h"  
 #include "RecoLocalTracker/SiStripClusterizer/interface/SiStripClusterInfo.h"
-#include "CondFormats/SiStripObjects/interface/SiStripLorentzAngle.h"
-#include "CondFormats/DataRecord/interface/SiStripLorentzAngleRcd.h"
 
 using namespace edm;
 using namespace reco;
@@ -31,11 +29,7 @@ ShallowGainCalibration::ShallowGainCalibration(const edm::ParameterSet& iConfig)
   produces <std::vector<unsigned char> >  ( Prefix + "amplitude"      + Suffix );
   produces <std::vector<double> >         ( Prefix + "gainused"       + Suffix );
   produces <std::vector<double> >         ( Prefix + "gainusedTick"   + Suffix );
-  produces <std::vector<float> >          ( Prefix + "BdotY"          + Suffix );
-  produces <std::vector<float> >          ( Prefix + "localB"         + Suffix );
   produces <std::vector<float> >          ( Prefix + "variance"       + Suffix );
-  produces <std::vector<float> >          ( Prefix + "dxoverdz"         + Suffix );
-  produces <std::vector<float> >          ( Prefix + "globalZofunitlocalY" + Suffix );  
   
 }
 
@@ -57,18 +51,13 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   auto         amplitude     = std::make_unique<std::vector<unsigned char>>  ();
   auto         gainused      = std::make_unique<std::vector<double>>         ();
   auto         gainusedTick  = std::make_unique<std::vector<double>>         ();
-  auto         BdotY         = std::make_unique<std::vector<float>>          ();
-  auto         localB        = std::make_unique<std::vector<float>>          ();
   auto         variance      = std::make_unique<std::vector<float>>          ();
-  auto         dxoverdz        = std::make_unique<std::vector<float>>          ();
-  auto         globalZofunitlocalY = std::make_unique<std::vector<float>>    ();
 
   
   edm::ESHandle<TrackerGeometry> theTrackerGeometry;         iSetup.get<TrackerDigiGeometryRecord>().get( theTrackerGeometry );  
   m_tracker=&(* theTrackerGeometry );
   edm::ESHandle<SiStripGain> gainHandle;                     iSetup.get<SiStripGainRcd>().get(gainHandle);
   edm::ESHandle<MagneticField> magfield;		                iSetup.get<IdealMagneticFieldRecord>().get(magfield);		      
-  edm::ESHandle<SiStripLorentzAngle> SiStripLorentzAngle;    iSetup.get<SiStripLorentzAngleDepRcd>().get(SiStripLorentzAngle);      
   edm::Handle<edm::View<reco::Track> > tracks;	             iEvent.getByToken(tracks_token_, tracks);	  
   edm::Handle<TrajTrackAssociationCollection> associations;  iEvent.getByToken(association_token_, associations);
 
@@ -125,11 +114,7 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             double                  PrevGainTick   = -1;
             int                     FirstStrip     = 0;
             int                     NStrips        = 0;
-            float                   bdoty = -999;
-            float                   locb  = -999;
-            float                   myvariance = -999;
-            float                   globalzy = -999;
-            float                   dxdz = -999;
+            float                   Variance       = -1;
 
             if(StripCluster){
                const auto           &  Ampls          = StripCluster->amplitudes();
@@ -169,17 +154,8 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                if(FirstStrip+Ampls.size()==639                   )Overlapping=true;
                if(FirstStrip+Ampls.size()==767                   )Overlapping=true;
                
-               const StripGeomDetUnit* theStripDet = dynamic_cast<const StripGeomDetUnit*>( theTrackerGeometry->idToDet( hit->geographicalId() ) );
                const SiStripClusterInfo info(*StripCluster, iSetup, DetId);
-               LocalVector drift = shallow::drift( theStripDet, *magfield, *SiStripLorentzAngle);
-                bdoty      = (theStripDet->surface()).toLocal( magfield->inTesla(theStripDet->surface().position())).y();
-                locb       = magfield->inTesla(theStripDet->surface().position()).mag() ;
-                myvariance = info.variance();
-                if ( drift.z() != 0 )
-                {
-                   dxdz   = drift.x()/drift.z();
-                }
-                globalzy   = (theStripDet->toGlobal(LocalVector(0,1,0))).z();
+               Variance = info.variance();
 
             }else if(PixelCluster){
                const auto&             Ampls          = PixelCluster->pixelADC();
@@ -213,11 +189,7 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             chargeoverpath->push_back( ChargeOverPath );
             gainused      ->push_back( PrevGain );  
             gainusedTick  ->push_back( PrevGainTick );  
-            BdotY->push_back( bdoty ); 
-            localB->push_back( locb );
-            variance-> push_back(myvariance);
-            dxoverdz->push_back( dxdz );
-            globalZofunitlocalY->push_back( globalzy );
+            variance      ->push_back( Variance );
 
           }
        }
@@ -239,11 +211,7 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(std::move(amplitude),     Prefix + "amplitude"     + Suffix );
   iEvent.put(std::move(gainused),      Prefix + "gainused"      + Suffix );
   iEvent.put(std::move(gainusedTick),  Prefix + "gainusedTick"  + Suffix );
-  iEvent.put(std::move(BdotY),         Prefix + "BdotY"         + Suffix );
-  iEvent.put(std::move(localB),        Prefix + "localB"        + Suffix );
   iEvent.put(std::move(variance),      Prefix + "variance"      + Suffix );
-  iEvent.put(std::move(dxoverdz),      Prefix + "dxoverdz"      + Suffix );
-  iEvent.put(std::move(globalZofunitlocalY), Prefix + "globalZofunitlocalY" + Suffix );  
 }
 
 /*
