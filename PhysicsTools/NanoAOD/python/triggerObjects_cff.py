@@ -91,10 +91,18 @@ triggerObjectTable = cms.EDProducer("TriggerObjectTableProducer",
         cms.PSet(
             name = cms.string("Jet"),
             id = cms.int32(1),
-            sel = cms.string("type(85) && pt > 30 && (coll('hltAK4PFJetsCorrected') || coll('hltMatchedVBF*PFJets*PFTau*OverlapRemoval'))"), 
+            sel = cms.string("type(86) && pt > 30 && coll('hltAK4PFJetsCorrected')"), 
             l1seed = cms.string("type(-99)"), l1deltaR = cms.double(0.3),
-            l2seed = cms.string("type(85)  && coll('hltAK4CaloJetsCorrectedIDPassed')"),  l2deltaR = cms.double(0.3),
-            qualityBits = cms.string("filter('*CrossCleaned*LooseChargedIsoPFTau*')"), qualityBitsDoc = cms.string("1 = VBF cross-cleaned from loose iso PFTau"),
+            l2seed = cms.string("type(86)  && coll('hltAK4CaloJetsCorrectedIDPassed')"),  l2deltaR = cms.double(0.3),
+            qualityBits = cms.string("0") , qualityBitsDoc = cms.string(""),
+        ),
+        cms.PSet(
+            name = cms.string("FatJet"),
+            id = cms.int32(6),
+            sel = cms.string("type(85) && pt > 120 && coll('hltAK8PFJetsCorrected')"), 
+            l1seed = cms.string("type(-99)"), l1deltaR = cms.double(0.3),
+            l2seed = cms.string("type(85)  && coll('hltAK8CaloJetsCorrectedIDPassed')"),  l2deltaR = cms.double(0.3),
+            qualityBits = cms.string("0"), qualityBitsDoc = cms.string(""),
         ),
         cms.PSet(
             name = cms.string("MET"),
@@ -123,7 +131,26 @@ triggerObjectTable = cms.EDProducer("TriggerObjectTableProducer",
             #l2seed = cms.string("type(90) && coll('hltHtMhtJet30')"),  l2deltaR = cms.double(9999),
             qualityBits = cms.string("0"), qualityBitsDoc = cms.string(""),
         ),
-
+        cms.PSet(
+            name = cms.string("BJet80"),
+            id = cms.int32(580),
+            sel = cms.string("type(86) && pt > 80 && coll('hltSelector6CentralJetsL1FastJet')"), 
+            l1seed = cms.string("type(-99)"), l1deltaR = cms.double(9999),
+            l2seed = cms.string("type(86)  && coll('hltAK4CaloJetsCorrectedIDPassed')"),  l2deltaR = cms.double(9999),
+            qualityBits = cms.string("filter('hltBTagCalo80x6CSVp0p92DoubleWithMatching') + " \
+                                     "2*filter('hltBTagCalo80x6CSVp0p92SingleWithMatching')") ,
+            qualityBitsDoc = cms.string("1 = MSSM Hbb online 2-btag allhad, 2 = MSSM Hbb online 1-btag allhad"),
+        ),
+        cms.PSet(
+            name = cms.string("BJet30"),
+            id = cms.int32(530),
+            sel = cms.string("type(86) && pt > 30 && coll('hltSelector8CentralJetsL1FastJet')"), 
+            l1seed = cms.string("type(-99)"), l1deltaR = cms.double(9999),
+            l2seed = cms.string("type(86)  && coll('hltAK4CaloJetsCorrectedIDPassed')"),  l2deltaR = cms.double(9999),
+            qualityBits = cms.string("filter('hltBTagCalo30x8CSVp0p92DoubleWithMatching') + " \
+                                     "2*filter('hltBTagCalo30x8CSVp0p92SingleWithMatching')") ,
+            qualityBitsDoc = cms.string("1 = MSSM Hbb online 2-btag semilep, 2 = MSSM Hbb online 1-btag semilep"),
+        ),
     ),
 )
 
