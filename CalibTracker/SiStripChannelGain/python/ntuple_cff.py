@@ -6,13 +6,16 @@ from CalibTracker.SiStripCommon.ShallowGainCalibration_cfi import *
 from CalibTracker.SiStripCommon.SiStripBFieldFilter_cfi import *
 
 from HLTrigger.HLTfilters.triggerResultsFilter_cfi import *
-AAGFilter = triggerResultsFilter.clone(triggerConditions = cms.vstring("HLT_ZeroBias_FirstCollisionAfterAbortGap_*"),
+#AAGFilter = triggerResultsFilter.clone(triggerConditions = cms.vstring("HLT_ZeroBias_FirstCollisionAfterAbortGap_*"),
+AAGFilter = triggerResultsFilter.clone(triggerConditions = cms.vstring("HLT_ZeroBias_*"),
                                        hltResults = cms.InputTag( "TriggerResults", "", "HLT" ),
                                        l1tResults = cms.InputTag( "" ),
                                        throw = cms.bool(False)
                                        )
 
-IsolatedMuonFilter = triggerResultsFilter.clone(triggerConditions = cms.vstring("HLT_IsoMu20_*"),
+#IsolatedMuonFilter = triggerResultsFilter.clone(triggerConditions = cms.vstring("HLT_IsoMu20_*"),
+IsolatedMuonFilter = triggerResultsFilter.clone(triggerConditions = cms.vstring("HLT_L1SingleMuCosmics_v*"),
+#IsolatedMuonFilter = triggerResultsFilter.clone(triggerConditions = cms.vstring("HLT_CDC_L2cosmic_5p5_er1p0_v*"),
                                                 hltResults = cms.InputTag( "TriggerResults", "", "HLT" ),
                                                 l1tResults = cms.InputTag( "" ),
                                                 throw = cms.bool(False)
