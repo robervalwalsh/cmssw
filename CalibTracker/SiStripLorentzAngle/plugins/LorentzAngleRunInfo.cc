@@ -57,7 +57,7 @@ void LorentzAngleRunInfo::beginRun(const edm::Run & irun, const edm::EventSetup 
    run = irun.run();
    edm::ESHandle<TrackerGeometry> theTrackerGeometry;         iSetup.get<TrackerDigiGeometryRecord>().get( theTrackerGeometry );  
    edm::ESHandle<MagneticField> magfield;                     iSetup.get<IdealMagneticFieldRecord>().get(magfield);                      
-   edm::ESHandle<SiStripLorentzAngle> SiStripLorentzAngle;    iSetup.get<SiStripLorentzAngleDepRcd>().get(SiStripLorentzAngle);      
+   edm::ESHandle<SiStripLorentzAngle> SiStripLorentzAngle;    iSetup.get<SiStripLorentzAngleRcd>().get("deconvolution",SiStripLorentzAngle);      
 
    auto dets = theTrackerGeometry -> detsTIB();
    dets.insert(dets.end(),(theTrackerGeometry -> detsTOB()).begin(),(theTrackerGeometry -> detsTOB()).end());
