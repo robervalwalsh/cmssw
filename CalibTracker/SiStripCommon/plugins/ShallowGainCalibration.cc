@@ -1,6 +1,7 @@
 #include "CalibTracker/SiStripCommon/interface/ShallowGainCalibration.h"
 #include "CalibFormats/SiStripObjects/interface/SiStripGain.h" 
-#include "CalibTracker/Records/interface/SiStripGainRcd.h"  
+#include "CalibTracker/Records/interface/SiStripGainRcd.h"
+#include "RecoLocalTracker/SiStripClusterizer/interface/SiStripClusterInfo.h"
 
 using namespace edm;
 using namespace reco;
@@ -30,6 +31,15 @@ ShallowGainCalibration::ShallowGainCalibration(const edm::ParameterSet& iConfig)
   produces <std::vector<unsigned char> >  ( Prefix + "amplitude"      + Suffix );
   produces <std::vector<double> >         ( Prefix + "gainused"       + Suffix );
   produces <std::vector<double> >         ( Prefix + "gainusedTick"   + Suffix );
+  produces <std::vector<float> >          ( Prefix + "variance"       + Suffix );
+// for backplane corrections
+  produces <std::vector<float> >          ( Prefix + "localx"         + Suffix );  
+  produces <std::vector<float> >          ( Prefix + "localy"         + Suffix );  
+  produces <std::vector<float> >          ( Prefix + "localz"         + Suffix );  
+  produces <std::vector<float> >          ( Prefix + "rhlocalx"       + Suffix );   
+  produces <std::vector<float> >          ( Prefix + "rhlocaly"       + Suffix );   
+  produces <std::vector<float> >          ( Prefix + "rhlocalxerr"    + Suffix );   
+  produces <std::vector<float> >          ( Prefix + "rhlocalyerr"    + Suffix );   
 }
 
 void ShallowGainCalibration::
@@ -52,6 +62,15 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   auto         amplitude     = std::make_unique<std::vector<unsigned char>>  ();
   auto         gainused      = std::make_unique<std::vector<double>>         ();
   auto         gainusedTick  = std::make_unique<std::vector<double>>         ();
+  auto         variance      = std::make_unique<std::vector<float>>          ();
+// for backplane corrections
+  auto         localx        = std::make_unique<std::vector<float>>          ();
+  auto         localy        = std::make_unique<std::vector<float>>          ();
+  auto         localz        = std::make_unique<std::vector<float>>          ();
+  auto         rhlocalx      = std::make_unique<std::vector<float>>          ();
+  auto         rhlocaly      = std::make_unique<std::vector<float>>          (); 
+  auto         rhlocalxerr   = std::make_unique<std::vector<float>>          (); 
+  auto         rhlocalyerr   = std::make_unique<std::vector<float>>          ();   
 
   edm::ESHandle<TrackerGeometry> theTrackerGeometry;         iSetup.get<TrackerDigiGeometryRecord>().get( theTrackerGeometry );  
   m_tracker=&(* theTrackerGeometry );
@@ -73,6 +92,8 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
           const SiStripRecHit2D*        sistripsimplehit    = dynamic_cast<const SiStripRecHit2D*>(hit);
           const SiStripMatchedRecHit2D* sistripmatchedhit   = dynamic_cast<const SiStripMatchedRecHit2D*>(hit);
           const SiPixelRecHit*          sipixelhit          = dynamic_cast<const SiPixelRecHit*>(hit);
+          // for the backplane corrections
+          const StripGeomDetUnit* theStripDet = dynamic_cast<const StripGeomDetUnit*>( theTrackerGeometry->idToDet( hit->geographicalId() ) );
 
           const SiPixelCluster*   PixelCluster = nullptr;
           const SiStripCluster*   StripCluster = nullptr;
@@ -110,6 +131,14 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             double                  PrevGainTick   = -1;
             int                     FirstStrip     = 0;
             int                     NStrips        = 0;
+            float                   Variance       = -1;
+            float                   locx           = -10;
+            float                   locy           = -10;
+            float                   locz           = -10;
+            float                   rhlocx         = -10;
+            float                   rhlocy         = -10;
+            float                   rhlocxerr      = -10;
+            float                   rhlocyerr      = -10;
 
             if(StripCluster){
                const auto           &  Ampls          = StripCluster->amplitudes();
@@ -148,6 +177,18 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
                if(FirstStrip+Ampls.size()==511                   )Overlapping=true;
                if(FirstStrip+Ampls.size()==639                   )Overlapping=true;
                if(FirstStrip+Ampls.size()==767                   )Overlapping=true;
+               
+               const SiStripClusterInfo info(*StripCluster, iSetup, DetId);
+               Variance = info.variance();
+               
+               locx = (theStripDet->toLocal(trajState.globalPosition())).x(); 
+               locy = (theStripDet->toLocal(trajState.globalPosition())).y();
+               locz = (theStripDet->toLocal(trajState.globalPosition())).z();
+               rhlocx = hit->localPosition().x();
+               rhlocy = hit->localPosition().y();
+               rhlocxerr = sqrt(hit->localPositionError().xx());
+               rhlocyerr = sqrt(hit->localPositionError().yy());
+               
             }else if(PixelCluster){
                const auto&             Ampls          = PixelCluster->pixelADC();
                int                     FirstRow       = PixelCluster->minPixelRow();
@@ -183,6 +224,16 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
             #endif
             gainused      ->push_back( PrevGain );  
             gainusedTick  ->push_back( PrevGainTick );  
+            variance      ->push_back( Variance );
+            // for the backplane corrections
+ 				localx->push_back(locx);    
+ 				localy->push_back(locy);    
+ 				localz->push_back(locz);    
+ 				rhlocalx->push_back(rhlocx);
+ 				rhlocaly->push_back(rhlocy);
+ 				rhlocalxerr->push_back(rhlocxerr);
+ 				rhlocalyerr->push_back(rhlocyerr);
+            
           }
        }
   }
@@ -205,6 +256,16 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(std::move(amplitude),     Prefix + "amplitude"     + Suffix );
   iEvent.put(std::move(gainused),      Prefix + "gainused"      + Suffix );
   iEvent.put(std::move(gainusedTick),  Prefix + "gainusedTick"  + Suffix );
+  iEvent.put(std::move(variance),      Prefix + "variance"      + Suffix );
+  // for the backplane corrections
+  iEvent.put(std::move(localx),        Prefix + "localx"        + Suffix );
+  iEvent.put(std::move(localy),        Prefix + "localy"        + Suffix );
+  iEvent.put(std::move(localz),        Prefix + "localz"        + Suffix );
+  iEvent.put(std::move(rhlocalx),      Prefix + "rhlocalx"      + Suffix );   
+  iEvent.put(std::move(rhlocaly),      Prefix + "rhlocaly"      + Suffix );   
+  iEvent.put(std::move(rhlocalxerr),   Prefix + "rhlocalxerr"   + Suffix );   
+  iEvent.put(std::move(rhlocalyerr),   Prefix + "rhlocalyerr"   + Suffix );   
+    
 }
 
 /*
