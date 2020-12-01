@@ -19,3 +19,16 @@ git cms-addpkg CalibTracker/SiStripLorentzAngle
 
 scram b -j4
 ```
+
+## run test
+
+```bash
+cd SiStripCommon/test/MakeCalibrationTrees
+cmsRun produceCalibrationTree_test_cfg.py \
+inputCollection=ALCARECOSiStripCalCosmics \
+inputFiles=/store/data/Run2018C/Cosmics/ALCARECO/SiStripCalCosmics-UL18-v1/230000/0C458F23-0922-164C-B1A6-306F77DDA853.root \
+runNumber=319591 \
+conditionGT=106X_dataRun2_v28 \
+cosmicTriggers="HLT_L1SingleMuOpen_v*"
+```
+
