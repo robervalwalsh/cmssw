@@ -33,14 +33,7 @@ options.register('outputFile',
                  "name for the output root file (\"calibTreeTest.root\" is default)")
 
 options.register('inputFiles',
-#                 "/store/data/Run2015D/ZeroBias/ALCARECO/SiStripCalMinBias-16Dec2015-v1/60007/869EE593-1FAB-E511-AF99-0025905A60B4.root",
-#                  '/store/data/Run2015D/ZeroBias/ALCARECO/SiStripCalMinBias-16Dec2015-v1/60009/0C35C6BF-D3AA-E511-9BC9-0CC47A4C8E16.root',
-#                  '/store/data/Run2015D/ZeroBias/ALCARECO/SiStripCalMinBias-16Dec2015-v1/60009/38B847F9-05AA-E511-AB78-00259074AE82.root',
-#                  '/store/data/Run2015D/ZeroBias/ALCARECO/SiStripCalMinBias-16Dec2015-v1/60009/D0BAD20B-09AB-E511-B073-0026189438F6.root',
-#                  '/store/data/Run2015D/ZeroBias/ALCARECO/SiStripCalMinBias-16Dec2015-v1/60009/DEFA8704-CCAA-E511-8203-0CC47A4D7634.root',
-#                  '/store/data/Run2015D/ZeroBias/ALCARECO/SiStripCalMinBias-16Dec2015-v1/60009/FE24690A-2DAA-E511-A96A-00259074AE3E.root',
-#                  '/store/data/Run2015D/ZeroBias/ALCARECO/SiStripCalMinBias-16Dec2015-v1/00000/0443D984-F9BA-E511-A740-0025905B8610.root',
-                  '/store/data/Run2015D/ZeroBias/ALCARECO/SiStripCalMinBias-14Apr2016-v1/50000/0085DB76-AC02-E611-9F0C-0002C94CD12E.root',
+                 '/store/data/Run2018D/Cosmics/ALCARECO/SiStripCalCosmics-UL18-v1/40000/0346DCE4-0C70-1344-A7EB-D488B627208C.root',
                  VarParsing.VarParsing.multiplicity.list,
                  VarParsing.VarParsing.varType.string,
                  "file to process")
@@ -58,6 +51,10 @@ options.register('runNumber',
                  "run number to process (\"-1\" for all)")
 
 
+options.register('cosmicTriggers','',
+                 VarParsing.VarParsing.multiplicity.list,
+                 VarParsing.VarParsing.varType.string,
+                 'cosmic triggers')
 
 
 # To use the prompt reco dataset please use 'generalTracks' as inputCollection
@@ -74,7 +71,6 @@ print("maxEvents         : ", options.maxEvents)
 print("outputFile        : ", options.outputFile)
 print("inputFiles        : ", options.inputFiles)
 print("runNumber         : ", options.runNumber)
-
 
 process = cms.Process('CALIB')
 process.load('CalibTracker.Configuration.setupCalibrationTree_cff')
@@ -107,13 +103,22 @@ if options.runNumber == -1:
      fileNames = cms.untracked.vstring( options.inputFiles )
    )
 else:
-   print("Restricting to the following events :")
-   print('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
-   process.source = cms.Source (
-        "PoolSource",
-         fileNames = cms.untracked.vstring( options.inputFiles ),
-         eventsToProcess = cms.untracked.VEventRange('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
-         )
+   if not 'Cosmics' in options.inputCollection:  # FIXME: this should be improved
+      print("Restricting to the following events :")
+      print('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
+      process.source = cms.Source (
+           "PoolSource",
+            fileNames = cms.untracked.vstring( options.inputFiles ),
+            eventsToProcess = cms.untracked.VEventRange('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
+            )
+   else:
+      print("Restricting to the following lumis for Cosmic runs only:")
+      print('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
+      process.source = cms.Source (
+           "PoolSource",
+            fileNames = cms.untracked.vstring( options.inputFiles ),
+            lumisToProcess = cms.untracked.VLuminosityBlockRange('%s:1-%s:MAX'%(options.runNumber,options.runNumber))
+            )
 
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
@@ -147,7 +152,9 @@ process.eventInfo = cms.EDAnalyzer(
       )
 )
 
-
+if len(options.cosmicTriggers)>0:
+   print("cosmicTriggers    : ", options.cosmicTriggers)
+   process.IsolatedMuonFilter.triggerConditions = cms.vstring(options.cosmicTriggers)
 
 process.TkCalPath_StdBunch   = cms.Path(process.TkCalSeq_StdBunch   *process.shallowEventRun*process.eventInfo)
 process.TkCalPath_StdBunch0T = cms.Path(process.TkCalSeq_StdBunch0T *process.shallowEventRun*process.eventInfo)
