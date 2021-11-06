@@ -25,7 +25,6 @@
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/EventSetup.h"
-#include "FWCore/Framework/interface/ESHandle.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -48,6 +47,7 @@ public:
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
 private:
+      
   virtual void beginJob();
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob();
@@ -58,6 +58,9 @@ private:
   //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
 
   // ----------member data ---------------------------
+  
+  edm::ESGetToken<Phase2TrackerCabling, Phase2TrackerCablingRcd> cablingToken_;
+  
 };
 
 //
@@ -72,6 +75,7 @@ private:
 // constructors and destructor
 //
 CheckPhase2Cabling::CheckPhase2Cabling(const edm::ParameterSet& iConfig)
+    : cablingToken_(esConsumes())
 
 {
   //now do what ever initialization is needed
@@ -90,28 +94,27 @@ CheckPhase2Cabling::~CheckPhase2Cabling() {
 void CheckPhase2Cabling::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   using namespace edm;
 
-  ESHandle<Phase2TrackerCabling> cablingHandle;
-  iSetup.get<Phase2TrackerCablingRcd>().get(cablingHandle);
+  const auto& cabling = iSetup.get<Phase2TrackerCablingRcd>().get(cablingToken_);
 
   // print general information about the cabling
-  std::cout << cablingHandle->summaryDescription() << std::endl;
+  std::cout << cabling.summaryDescription() << std::endl;
   // print detailed information
-  std::cout << cablingHandle->description() << std::endl;
+  std::cout << cabling.description() << std::endl;
 
   // search information about one module
-  Phase2TrackerModule module = cablingHandle->findFedCh(std::make_pair(0, 1));
+  Phase2TrackerModule module = cabling.findFedCh(std::make_pair(0, 1));
 
   // print information about that module
   std::cout << "Information about the module connected to FED 0.1:" << std::endl;
   std::cout << module.description() << std::endl;
 
   // look at one subset (based on cooling)
-  Phase2TrackerCabling coolingLoop = cablingHandle->filterByCoolingLine(0);
+  Phase2TrackerCabling coolingLoop = cabling.filterByCoolingLine(0);
   std::cout << "Subset in cooling line 0:" << std::endl;
   std::cout << coolingLoop.description(1) << std::endl;
 
   // look at one subset (based on power)
-  Phase2TrackerCabling powerGroup = cablingHandle->filterByPowerGroup(1);
+  Phase2TrackerCabling powerGroup = cabling.filterByPowerGroup(1);
   std::cout << "Subset in power group 1:" << std::endl;
   std::cout << powerGroup.description(1) << std::endl;
 }

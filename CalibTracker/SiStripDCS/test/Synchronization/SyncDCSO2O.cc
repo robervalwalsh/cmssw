@@ -5,8 +5,6 @@
 #include "CondFormats/Common/interface/TimeConversions.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/EventSetup.h"
-#include "CondFormats/SiStripObjects/interface/SiStripDetVOff.h"
-#include "CondFormats/DataRecord/interface/SiStripCondDataRecords.h"
 
 #include <iostream>
 #include <algorithm>
@@ -17,6 +15,15 @@
 SyncDCSO2O::SyncDCSO2O(const edm::ParameterSet& iConfig) {
   // get all digi collections
   digiProducersList_ = iConfig.getParameter<Parameters>("DigiProducersList");
+  int icoll = 0;
+  Parameters::iterator itDigiProducersList = digiProducersList_.begin();
+  for (; itDigiProducersList != digiProducersList_.end(); ++itDigiProducersList) {
+    std::string digiProducer = itDigiProducersList->getParameter<std::string>("DigiProducer");
+    std::string digiLabel = itDigiProducersList->getParameter<std::string>("DigiLabel");
+    digiDetsetVectorToken_[icoll] = consumes<edm::DetSetVector<SiStripDigi> >(edm::InputTag(digiProducer,digiLabel));
+    icoll++;
+  }
+  detVOffToken_ = esConsumes();
 }
 
 SyncDCSO2O::~SyncDCSO2O() {
@@ -88,15 +95,14 @@ SyncDCSO2O::~SyncDCSO2O() {
 void SyncDCSO2O::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   using namespace edm;
 
-  ESHandle<SiStripDetVOff> detVOff;
-  iSetup.get<SiStripDetVOffRcd>().get(detVOff);
+  const auto& detVOff = iSetup.get<SiStripDetVOffRcd>().get(detVOffToken_);
 
   std::vector<uint32_t> detIds;
-  detVOff->getDetIds(detIds);
+  detVOff.getDetIds(detIds);
   std::cout << "Number of DetIds with HV off = " << detIds.size() << std::endl;
 
   // stringstream ss;
-  // detVOff->printSummary(ss);
+  // detVOff.printSummary(ss);
   // std::cout << ss.str() << std::endl;
 
   // double seconds = (iEvent.time().value() >> 32);
@@ -122,26 +128,21 @@ void SyncDCSO2O::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     for (; it != digiDetsetVector_[0]->end(); ++it) {
       totDigis += it->size();
       // Compute also number of digis masking detIds off according to DetVOff
-      if (!(detVOff->IsModuleHVOff(it->detId()))) {
+      if (!(detVOff.IsModuleHVOff(it->detId()))) {
         totDigisWithMasking += it->size();
       }
     }
     std::cout << "digis = " << totDigis << std::endl;
-    timeInfo_.push_back(TimeInfo(iEvent.time().value(), totDigis, totDigisWithMasking, detVOff->getHVoffCounts()));
+    timeInfo_.push_back(TimeInfo(iEvent.time().value(), totDigis, totDigisWithMasking, detVOff.getHVoffCounts()));
   }
 }
 
 void SyncDCSO2O::getDigis(const edm::Event& iEvent) {
   using namespace edm;
 
-  int icoll = 0;
-  Parameters::iterator itDigiProducersList = digiProducersList_.begin();
-  for (; itDigiProducersList != digiProducersList_.end(); ++itDigiProducersList) {
-    std::string digiProducer = itDigiProducersList->getParameter<std::string>("DigiProducer");
-    std::string digiLabel = itDigiProducersList->getParameter<std::string>("DigiLabel");
+    for ( size_t icoll = 0; icoll < digiProducersList_.size(); ++icoll ) {
     // std::cout << "Reading digi for " << digiProducer << " with label: " << digiLabel << std::endl;
-    iEvent.getByLabel(digiProducer, digiLabel, digiDetsetVector_[icoll]);
-    icoll++;
+    iEvent.getByToken(digiDetsetVectorToken_[icoll],digiDetsetVector_[icoll]);
   }
 }
 

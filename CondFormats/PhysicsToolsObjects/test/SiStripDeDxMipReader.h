@@ -9,10 +9,12 @@
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/EventSetup.h"
-#include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "CondFormats/PhysicsToolsObjects/interface/Histogram2D.h"
+#include "CondFormats/DataRecord/interface/SiStripDeDxMipRcd.h"
+
 
 class SiStripDeDxMipReader : public edm::EDAnalyzer {
 public:
@@ -23,5 +25,6 @@ public:
 
 private:
   //  uint32_t printdebug_;
+  edm::ESGetToken<PhysicsTools::Calibration::HistogramD2D, SiStripDeDxMipRcd> siStripDeDxMipToken_;
 };
 #endif

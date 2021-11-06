@@ -1,6 +1,3 @@
-#include "CalibFormats/SiStripObjects/interface/SiStripQuality.h"
-#include "CalibTracker/Records/interface/SiStripQualityRcd.h"
-
 #include "CalibTracker/SiStripESProducers/test/testSiStripQualityESProducer.h"
 
 #include <iostream>
@@ -14,7 +11,11 @@ testSiStripQualityESProducer::testSiStripQualityESProducer(const edm::ParameterS
       firstIOV(true),
       twoRecordComparison_(iConfig.getUntrackedParameter<bool>("twoRecordComparison", false)),
       dataLabel_(iConfig.getUntrackedParameter<std::string>("dataLabel", "")),
-      dataLabelTwo_(iConfig.getUntrackedParameter<std::string>("dataLabelTwo", "")) {}
+      dataLabelTwo_(iConfig.getUntrackedParameter<std::string>("dataLabelTwo", "")) {
+      
+  siStripQualityESHToken_ = esConsumes(edm::ESInputTag(dataLabel_));
+  twoSiStripQualityESHToken_ = esConsumes(edm::ESInputTag(dataLabelTwo_));
+}
 
 void testSiStripQualityESProducer::analyze(const edm::Event& e, const edm::EventSetup& iSetup) {
   unsigned long long cacheID = iSetup.get<SiStripQualityRcd>().cacheIdentifier();
@@ -29,31 +30,31 @@ void testSiStripQualityESProducer::analyze(const edm::Event& e, const edm::Event
   //&&&&&&&&&&&&&&&&&&
   //First Record
   //&&&&&&&&&&&&&&&&&&
-  edm::ESHandle<SiStripQuality> SiStripQualityESH_;
-  iSetup.get<SiStripQualityRcd>().get(dataLabel_, SiStripQualityESH_);
+  const auto& siStripQualityESH = iSetup.get<SiStripQualityRcd>().get(siStripQualityESHToken_);
+  
+  
   edm::LogInfo("testSiStripQualityESProducer")
       << canvas << "[testSiStripQualityESProducer::analyze] Print SiStripQualityRecord" << canvas << std::endl;
-  printObject(SiStripQualityESH_.product());
+  printObject(&siStripQualityESH);
 
   //&&&&&&&&&&&&&&&&&&
   //Second Record
   //&&&&&&&&&&&&&&&&&&
-  edm::ESHandle<SiStripQuality> twoSiStripQualityESH_;
   if (twoRecordComparison_) {
-    iSetup.get<SiStripQualityRcd>().get(dataLabelTwo_, twoSiStripQualityESH_);
+    const auto& twoSiStripQualityESH = iSetup.get<SiStripQualityRcd>().get(twoSiStripQualityESHToken_);
     edm::LogInfo("testSiStripQualityESProducer")
         << canvas << "[testSiStripQualityESProducer::analyze] Print Second SiStripQualityRecord" << canvas << std::endl;
-    printObject(twoSiStripQualityESH_.product());
+    printObject(&twoSiStripQualityESH);
 
     edm::LogInfo("testSiStripQualityESProducer")
         << canvas << "[testSiStripQualityESProducer::analyze] Print difference (First - Second) SiStripQuality Rcd"
         << canvas << std::endl;
-    const SiStripQuality& tmp1 = SiStripQualityESH_->difference(*twoSiStripQualityESH_);
+    const SiStripQuality& tmp1 = siStripQualityESH.difference(twoSiStripQualityESH);
     printObject(&tmp1);
     edm::LogInfo("testSiStripQualityESProducer")
         << canvas << "[testSiStripQualityESProducer::analyze] Print difference (Second - First) SiStripQuality Rcd"
         << canvas << std::endl;
-    const SiStripQuality& tmp2 = twoSiStripQualityESH_->difference(*SiStripQualityESH_);
+    const SiStripQuality& tmp2 = twoSiStripQualityESH.difference(siStripQualityESH);
     printObject(&tmp2);
   }
 
@@ -65,19 +66,19 @@ void testSiStripQualityESProducer::analyze(const edm::Event& e, const edm::Event
     edm::LogInfo("testSiStripQualityESProducer")
         << canvas << "[testSiStripQualityESProducer::analyze] Print difference (Current - Previous) SiStripQuality Rcd"
         << canvas << std::endl;
-    const SiStripQuality& tmp1 = SiStripQualityESH_->difference(*m_Quality_);
+    const SiStripQuality& tmp1 = siStripQualityESH.difference(*m_Quality_);
     printObject(&tmp1);
     edm::LogInfo("testSiStripQualityESProducer")
         << canvas << "[testSiStripQualityESProducer::analyze] Print difference (Previous - Current) SiStripQuality Rcd"
         << canvas << std::endl;
-    const SiStripQuality& tmp2 = m_Quality_->difference(*SiStripQualityESH_);
+    const SiStripQuality& tmp2 = m_Quality_->difference(siStripQualityESH);
     printObject(&tmp2);
   }
 
   firstIOV = false;
   edm::LogInfo("testSiStripQualityESProducer")
       << "[testSiStripQualityESProducer::analyze] Constructing new object " << std::endl;
-  m_Quality_ = new SiStripQuality(*SiStripQualityESH_);
+  m_Quality_ = new SiStripQuality(siStripQualityESH);
 }
 
 void testSiStripQualityESProducer::printObject(const SiStripQuality* SiStripQuality_) {

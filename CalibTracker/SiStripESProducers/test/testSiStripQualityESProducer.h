@@ -12,8 +12,8 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-
-class SiStripQuality;
+#include "CalibFormats/SiStripObjects/interface/SiStripQuality.h"
+#include "CalibTracker/Records/interface/SiStripQualityRcd.h"
 
 class testSiStripQualityESProducer : public edm::EDAnalyzer {
 public:
@@ -31,5 +31,8 @@ private:
   std::string dataLabel_;
   std::string dataLabelTwo_;
   SiStripQuality* m_Quality_;
+  edm::ESGetToken<SiStripQuality, SiStripQualityRcd> siStripQualityESHToken_;
+  edm::ESGetToken<SiStripQuality, SiStripQualityRcd> twoSiStripQualityESHToken_;
+  
 };
 #endif

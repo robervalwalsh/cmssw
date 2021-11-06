@@ -9,7 +9,6 @@
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/EventSetup.h"
-#include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
@@ -29,46 +28,47 @@ public:
 
 private:
   //  uint32_t printdebug_;
+  edm::ESGetToken<PhysicsTools::Calibration::VHistogramD2D, SiStripDeDxProton_2D_Rcd> siStripDeDx2DToken_;
 };
 
-SiStripDeDx2DReader::SiStripDeDx2DReader(const edm::ParameterSet& iConfig) {}
+SiStripDeDx2DReader::SiStripDeDx2DReader(const edm::ParameterSet& iConfig)
 //:  printdebug_(iConfig.getUntrackedParameter<uint32_t>("printDebug",1)){}
+    : siStripDeDx2DToken_(esConsumes()) {}
 
 SiStripDeDx2DReader::~SiStripDeDx2DReader() {}
 
 void SiStripDeDx2DReader::analyze(const edm::Event& e, const edm::EventSetup& iSetup) {
-  edm::ESHandle<PhysicsTools::Calibration::VHistogramD2D> SiStripDeDx2D_;
-  iSetup.get<SiStripDeDxProton_2D_Rcd>().get(SiStripDeDx2D_);
+  const auto & siStripDeDx2D = iSetup.get<SiStripDeDxProton_2D_Rcd>().get(siStripDeDx2DToken_);
   edm::LogInfo("SiStripDeDx2DReader") << "[SiStripDeDx2DReader::analyze] End Reading SiStripDeDxProton_2D" << std::endl;
 
   for (int ihisto = 0; ihisto < 3; ihisto++) {
-    std::cout << (SiStripDeDx2D_->vHist)[ihisto].numberOfBinsX() << "   "
-              << (SiStripDeDx2D_->vHist)[ihisto].numberOfBinsY() << std::endl;
+    std::cout << (siStripDeDx2D.vHist)[ihisto].numberOfBinsX() << "   "
+              << (siStripDeDx2D.vHist)[ihisto].numberOfBinsY() << std::endl;
 
     for (int ix = 0; ix < 300; ix++) {
       for (int iy = 0; iy < 1000; iy++) {
-        std::cout << (SiStripDeDx2D_->vHist)[ihisto].binContent(ix, iy) << " "
-                  << (SiStripDeDx2D_->vHist)[ihisto].value(ix / 100., iy) << std::endl;
+        std::cout << (siStripDeDx2D.vHist)[ihisto].binContent(ix, iy) << " "
+                  << (siStripDeDx2D.vHist)[ihisto].value(ix / 100., iy) << std::endl;
       }
     }
 
-    std::cout << "Value = " << (SiStripDeDx2D_->vValues)[ihisto] << std::endl;
+    std::cout << "Value = " << (siStripDeDx2D.vValues)[ihisto] << std::endl;
   }
 
   //   std::vector<uint32_t> detid;
-  //   SiStripDeDx2D_->getDetIds(detid);
+  //   siStripDeDx2D.getDetIds(detid);
   //   edm::LogInfo("Number of detids ")  << detid.size() << std::endl;
 
   //   if (printdebug_)
   //     for (size_t id=0;id<detid.size() && id<printdebug_;id++)
   //       {
-  // 	SiStripDeDx2D::Range range=SiStripDeDx2D_->getRange(detid[id]);
+  // 	siStripDeDx2D::Range range=siStripDeDx2D.getRange(detid[id]);
 
   // 	int apv=0;
   // 	for(int it=0;it<range.second-range.first;it++){
   // 	  edm::LogInfo("SiStripDeDx2DReader")  << "detid " << detid[id] << " \t"
   // 					     << " apv " << apv++ << " \t"
-  // 					     << SiStripDeDx2D_->getDeDx2D(it,range)     << " \t"
+  // 					     << siStripDeDx2D.getDeDx2D(it,range)     << " \t"
   // 					     << std::endl;
   // 	}
   //       }

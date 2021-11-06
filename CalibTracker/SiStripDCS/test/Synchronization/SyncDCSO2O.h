@@ -30,6 +30,8 @@
 #include "DataFormats/Common/interface/DetSetVectorNew.h"
 #include "DataFormats/Common/interface/DetSetVector.h"
 #include "DataFormats/SiStripDigi/interface/SiStripDigi.h"
+#include "CondFormats/SiStripObjects/interface/SiStripDetVOff.h"
+#include "CondFormats/DataRecord/interface/SiStripCondDataRecords.h"
 
 #include <vector>
 
@@ -52,6 +54,9 @@ private:
 
   // ----------member data ---------------------------
   edm::Handle<edm::DetSetVector<SiStripDigi> > digiDetsetVector_[4];
+  edm::EDGetTokenT<edm::DetSetVector<SiStripDigi> > digiDetsetVectorToken_[4];
+  edm::ESGetToken<SiStripDetVOff, SiStripDetVOffRcd> detVOffToken_;
+
   typedef std::vector<edm::ParameterSet> Parameters;
   Parameters digiProducersList_;
 

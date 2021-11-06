@@ -4,6 +4,9 @@
 #define CalibFormats_SiStripObjects_test_SiStripHashedDetId_H
 
 #include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
+
 
 /**
    @class test_SiStripHashedDetId
@@ -18,6 +21,9 @@ public:
   void initialize(edm::EventSetup const &);
   void analyze(const edm::Event &, const edm::EventSetup &);
   void endJob() { ; }
+  
+private:
+  edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> geomToken_;
 };
 
 #endif  // CalibFormats_SiStripObjects_test_SiStripHashedDetId_H

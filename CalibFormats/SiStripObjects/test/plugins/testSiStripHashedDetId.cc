@@ -2,16 +2,13 @@
 #include "CalibFormats/SiStripObjects/interface/SiStripHashedDetId.h"
 #include "CalibFormats/SiStripObjects/test/plugins/testSiStripHashedDetId.h"
 #include "DataFormats/SiStripCommon/interface/SiStripConstants.h"
-#include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "Geometry/CommonDetUnit/interface/GeomDet.h"
 #include "Geometry/CommonDetUnit/interface/GeomDetType.h"
 #include "Geometry/CommonTopologies/interface/StripTopology.h"
-#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
 #include "Geometry/TrackerGeometryBuilder/interface/StripGeomDetType.h"
 #include "Geometry/TrackerGeometryBuilder/interface/StripGeomDetUnit.h"
-#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -24,6 +21,7 @@ using namespace sistrip;
 // -----------------------------------------------------------------------------
 //
 testSiStripHashedDetId::testSiStripHashedDetId(const edm::ParameterSet &pset) {
+  geomToken_ = esConsumes();
   edm::LogVerbatim(mlDqmCommon_) << "[testSiStripHashedDetId::" << __func__ << "]"
                                  << " Constructing object...";
 }
@@ -42,14 +40,13 @@ void testSiStripHashedDetId::initialize(const edm::EventSetup &setup) {
                                  << " Tests the generation of DetId hash map...";
 
   // Retrieve geometry
-  edm::ESHandle<TrackerGeometry> geom;
-  setup.get<TrackerDigiGeometryRecord>().get(geom);
+  const auto & geom = setup.get<TrackerDigiGeometryRecord>().get(geomToken_);
 
   // Build list of DetIds
   std::vector<uint32_t> dets;
   dets.reserve(16000);
-  TrackerGeometry::DetContainer::const_iterator iter = geom->detUnits().begin();
-  for (; iter != geom->detUnits().end(); ++iter) {
+  TrackerGeometry::DetContainer::const_iterator iter = geom.detUnits().begin();
+  for (; iter != geom.detUnits().end(); ++iter) {
     const auto strip = dynamic_cast<const StripGeomDetUnit *>(*iter);
     if (strip) {
       dets.push_back((strip->geographicalId()).rawId());
