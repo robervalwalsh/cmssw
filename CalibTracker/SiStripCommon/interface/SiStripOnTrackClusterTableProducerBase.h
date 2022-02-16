@@ -2,6 +2,9 @@
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
+
 #include "DataFormats/NanoAOD/interface/FlatTable.h"
 #include "DataFormats/SiStripCluster/interface/SiStripCluster.h"
 #include "DataFormats/TrackReco/interface/Track.h"
@@ -9,16 +12,11 @@
 
 class SiStripOnTrackClusterTableProducerBase : public edm::stream::EDProducer<> {
 public:
-  explicit SiStripOnTrackClusterTableProducerBase(const edm::ParameterSet& params)
-      : m_name(params.getParameter<std::string>("name")),
-        m_doc(params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""),
-        m_extension(params.existsAs<bool>("extension") ? params.getParameter<bool>("extension") : true),
-        m_tracks_token(consumes<edm::View<reco::Track>>(params.getParameter<edm::InputTag>("Tracks"))),
-        m_association_token(consumes<TrajTrackAssociationCollection>(params.getParameter<edm::InputTag>("Tracks"))) {
-    produces<nanoaod::FlatTable>();
-  }
+  explicit SiStripOnTrackClusterTableProducerBase(const edm::ParameterSet& params);
   ~SiStripOnTrackClusterTableProducerBase() override;
 
+  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
+  
   void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) final;
 
   struct OnTrackCluster {

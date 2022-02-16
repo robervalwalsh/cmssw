@@ -4,6 +4,15 @@
 
 #include "CalibTracker/SiStripCommon/interface/SiStripOnTrackClusterTableProducerBase.h"
 
+SiStripOnTrackClusterTableProducerBase::SiStripOnTrackClusterTableProducerBase(const edm::ParameterSet& params)
+      : m_name(params.getParameter<std::string>("name")),
+        m_doc(params.getParameter<std::string>("doc")),
+        m_extension(params.getParameter<bool>("extension")),
+        m_tracks_token(consumes<edm::View<reco::Track>>(params.getParameter<edm::InputTag>("Tracks"))),
+        m_association_token(consumes<TrajTrackAssociationCollection>(params.getParameter<edm::InputTag>("Tracks"))) {
+    produces<nanoaod::FlatTable>();
+  }
+  
 SiStripOnTrackClusterTableProducerBase::~SiStripOnTrackClusterTableProducerBase() {}
 
 namespace {
@@ -66,3 +75,11 @@ void SiStripOnTrackClusterTableProducerBase::produce(edm::Event& iEvent, const e
   fillTable(clusters, *tracks, out.get(), iSetup);
   iEvent.put(std::move(out));
 }
+
+void SiStripOnTrackClusterTableProducerBase::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  edm::ParameterSetDescription desc;
+  desc.add<std::string>("doc", "");
+  desc.add<bool>("extension", true);
+  descriptions.add("SiStripOnTrackClusterTableProducerBase", desc);
+}
+

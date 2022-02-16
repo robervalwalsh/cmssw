@@ -23,6 +23,9 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Utilities/interface/Likely.h"
 
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
+
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include <sstream>
 #include <memory>
@@ -173,16 +176,17 @@ public:
                                                               conf.getParameter<edm::ParameterSet>("Clusterizer"))),
         rawAlgos_(SiStripRawProcessingFactory::create(conf.getParameter<edm::ParameterSet>("Algorithms"),
                                                       consumesCollector())),
-        doAPVEmulatorCheck_(conf.existsAs<bool>("DoAPVEmulatorCheck") ? conf.getParameter<bool>("DoAPVEmulatorCheck")
-                                                                      : true),
-        legacy_(conf.existsAs<bool>("LegacyUnpacker") ? conf.getParameter<bool>("LegacyUnpacker") : false),
+        doAPVEmulatorCheck_(conf.getParameter<bool>("DoAPVEmulatorCheck")),
+        legacy_(conf.getParameter<bool>("LegacyUnpacker")),
         hybridZeroSuppressed_(conf.getParameter<bool>("HybridZeroSuppressed")) {
     productToken_ = consumes<FEDRawDataCollection>(conf.getParameter<edm::InputTag>("ProductLabel"));
     produces<edmNew::DetSetVector<SiStripCluster> >();
     assert(clusterizer_.get());
     assert(rawAlgos_.get());
   }
-
+  
+  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
+  
   void produce(edm::Event& ev, const edm::EventSetup& es) override {
     initialize(es);
 
@@ -253,6 +257,14 @@ void SiStripClusterizerFromRaw::run(const FEDRawDataCollection& rawColl, edmNew:
 
   }  // end loop over dets
 }
+
+void SiStripClusterizerFromRaw::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  edm::ParameterSetDescription desc;
+  desc.add<bool>("DoAPVEmulatorCheck", false);
+  desc.add<bool>("LegacyUnpacker", false);
+  descriptions.add("SiStripClusterizerFromRaw", desc);
+}
+
 
 namespace {
   class StripByStripAdder {

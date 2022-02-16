@@ -14,7 +14,7 @@
 
 SiStripRecHitMatcher::SiStripRecHitMatcher(const edm::ParameterSet& conf)
     : scale_(conf.getParameter<double>("NSigmaInside")),
-      preFilter_(conf.existsAs<bool>("PreFilter") ? conf.getParameter<bool>("PreFilter") : false) {}
+      preFilter_(conf.getParameter<bool>("PreFilter")) {}
 
 SiStripRecHitMatcher::SiStripRecHitMatcher(const double theScale) : scale_(theScale) {}
 
@@ -336,3 +336,10 @@ std::unique_ptr<SiStripMatchedRecHit2D> SiStripRecHitMatcher::match(const SiStri
     return std::make_unique<SiStripMatchedRecHit2D>(LocalPoint(position), error, *gluedDet, monoRH, stereoRH);
   return std::unique_ptr<SiStripMatchedRecHit2D>(nullptr);
 }
+
+void SiStripRecHitMatcher::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+  edm::ParameterSetDescription desc;
+  desc.add<bool>("PreFilter", false);
+  descriptions.add("SiStripRecHitMatcher", desc);
+}
+

@@ -13,6 +13,9 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
+
 #include "TrackingTools/TransientTrackingRecHit/interface/HelpertRecHit2DLocalPos.h"
 
 class GluedGeomDet;
@@ -37,6 +40,8 @@ public:
   SiStripRecHitMatcher(const edm::ParameterSet& conf);
   SiStripRecHitMatcher(const double theScale);
 
+  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
+  
   bool preFilter() const { return preFilter_; }
 
   inline static float sigmaPitch(LocalPoint const& pos, LocalError const& err, const StripTopology& topol) {

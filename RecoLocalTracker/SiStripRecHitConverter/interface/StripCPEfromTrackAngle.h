@@ -3,6 +3,9 @@
 
 #include "RecoLocalTracker/SiStripRecHitConverter/interface/StripCPE.h"
 
+#include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
+#include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
+
 class StripCPEfromTrackAngle : public StripCPE {
 private:
   using StripCPE::localParameters;
@@ -53,5 +56,7 @@ public:
                          const SiStripBackPlaneCorrection& backPlaneCorrection,
                          const SiStripConfObject& confObj,
                          const SiStripLatency& latency);
+  
+  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 };
 #endif

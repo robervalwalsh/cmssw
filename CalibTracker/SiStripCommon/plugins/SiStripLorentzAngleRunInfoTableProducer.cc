@@ -21,7 +21,7 @@ public:
   explicit SiStripLorentzAngleRunInfoTableProducer(const edm::ParameterSet& params)
       : m_name{params.getParameter<std::string>("name")},
         m_magFieldName{params.getParameter<std::string>("magFieldName")},
-        m_doc{params.existsAs<std::string>("doc") ? params.getParameter<std::string>("doc") : ""},
+        m_doc{params.getParameter<std::string>("doc")},
         m_tkGeomToken{esConsumes<edm::Transition::BeginRun>()},
         m_magFieldToken{esConsumes<edm::Transition::BeginRun>()},
         m_lorentzAngleToken{esConsumes<edm::Transition::BeginRun>()} {
@@ -31,13 +31,7 @@ public:
 
   void produce(edm::StreamID, edm::Event&, edm::EventSetup const&) const override {}
 
-  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
-    edm::ParameterSetDescription desc;
-    desc.add<std::string>("name", "Det");
-    desc.add<std::string>("magFieldName", "magField");
-    desc.add<std::string>("doc", "Run info for the Lorentz angle measurement");
-    descriptions.add("siStripLorentzAngleRunInfoTable", desc);
-  }
+  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
   void globalBeginRunProduce(edm::Run& iRun, edm::EventSetup const& iSetup) const override;
 
@@ -102,6 +96,14 @@ void SiStripLorentzAngleRunInfoTableProducer::globalBeginRunProduce(edm::Run& iR
   iRun.put(std::move(out2), "magField");
 }
 
+void SiStripLorentzAngleRunInfoTableProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+    edm::ParameterSetDescription desc;
+    desc.add<std::string>("name", "Det");
+    desc.add<std::string>("magFieldName", "magField");
+    desc.add<std::string>("doc", "Run info for the Lorentz angle measurement");
+    descriptions.add("SiStripLorentzAngleRunInfoTable", desc);
+  }
+  
 #include "FWCore/PluginManager/interface/ModuleDef.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(SiStripLorentzAngleRunInfoTableProducer);
